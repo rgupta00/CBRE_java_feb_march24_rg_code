@@ -1,0 +1,17 @@
+package com.day5.ex4.map_example;
+
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Map;
+
+public class E_IdenttyHashMap {
+	
+	public static void main(String[] args) {
+		
+
+		
+		
+
+	}
+
+}

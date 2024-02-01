@@ -1,0 +1,4 @@
+This is fine, as long as cleanUp() can never throw any exception. In the above example, if someMethod() throws an exception, and in the finally block also, cleanUp() throws an exception, that second exception will come out of the method and the
+ original first exception (correct reason) will be lost forever.
+If the code that you call in a finally block can
+ possibly throw an exception, make sure that you either handle it or log it. Never let it come out of the finally block

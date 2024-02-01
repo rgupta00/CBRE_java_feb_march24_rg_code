@@ -1,0 +1,190 @@
+Agenda 
+---------
+100 hr 
+module 1: core java
+
+module 2: tools
+
+module 3: JEE java enterprise edition
+	servlet jsp ejb hibernate
+	Spring mvc : servlet 
+
+		REST
+		
+module 4: Jdbc vs Hibernate/Entity
+		ORM
+	  Mongodb vs Moogoose
+				oo wrapper 
+module 5: Spring core
+		DI loose coupling
+		
+module 6: Spring boot
+		simplificaiton of spring 
+		
+
+module 7: Microservice
+	
+module 8: Docker k8s
+
+module 9: Final project
+
+
+tools required :
+================
+
+jdk 17
+
+intellij community edition
+	
+
+git
+
+maven
+
+mysql 8
+
+postman
+
+mongodb
+
+docker for desktop
+
+local k8s cluster
+
+kubedum: admin
+
+minikube, kind : sw dev
+
+
+aws/gcp account
+
+
+
+
+Module 1: Core Java
+====================
+
+This week:
+--------------
+Session 1: Object Orientation, JVM architecture
+Session 2: Advance Object Orientation with Java
+Session 3: IO and Exception handling
+Session 4: Collections and Generics
+
+
+
+
+private default protected public
+data/method
+
+class: default public
+
+public class A{
+
+}
+
+class : private
+
+
+outer class not possible
+private class Foo{		X
+}
+
+outer class not possible
+protected class Foo{   X
+}
+
+
+
+inner class 
+class A{
+
+private class Foo{
+}
+
+}
+
+package:
+---------
+used to orgainised the code
+
+	face rec system
+	aif
+	
+	mvc
+	Amit ui : Face
+	
+	Sumit db: Face
+	
+	controller
+	
+	cbre
+	
+and 
+it is used to achive better encapsulation
+
+
+how to fight with chnage
+how to write woundeerful code
+so that u can fight with chanage req?
+
+
+loose coupling and high cohesion
+
+loose coupling 
+
+A			B
+
+
+high cohesion
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
