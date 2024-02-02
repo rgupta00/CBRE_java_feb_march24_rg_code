@@ -1,0 +1,136 @@
+
+Strategy Pattern
+-----------------
+	=>The strategy pattern is intended to provide a means to define a family of algorithms,    		
+	encapsulate each one as an object, and make them interchangeable select algo at run time convert IS-A to HAS-A
+
+	=> It separate algorithms into classes that can be plugged in at runtime.
+ 
+	=> I need to provide discount strategy for code flexibility 
+
+	=> used when we have multiple algorithm for a specific task and client
+	 decides the actual implementation to be used at runtime.
+
+
+Designing shopping cart :
+------------------------
+
+class Product {
+	private int id;
+	private String name;
+	private double price;
+	private int quantity;
+
+}
+
+
+public class Cart {
+	private List<Product> productList = new ArrayList<>();
+	private double totalCartValue;
+
+
+	public void addProduct(Product product) {
+		productList.add(product);
+	} 
+	
+
+	public int getProductCount(){
+		return productList.size();
+	}
+	
+	public double getTotalCartValue(){
+		if(productList.size()> 0){
+			for(Product p: productList){
+				totalCartValue=totalCartValue+p.getPrice()*p.getQuantity();
+			}
+		}
+			
+		return totalCartValue;
+	}
+}
+
+
+
+Now we need discount policy:
+-----------------------------
+discount can change any time...we need flexiable model
+
+interface Discount {
+	public void discount(Product product);
+
+}
+
+// buy 5 get 2 item free
+class BuyXGetYItem implements Discount {
+	private int x;
+	private int y;
+
+	public BuyXGetYItem(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	@Override
+	public void discount(Product product) {
+		if(product.getQuantity()>=x){
+			product.setQuantity(product.getQuantity()+product.getQuantity());
+		}
+	}
+}
+
+class BuyXGetYPercentageDiscount implements Discount{
+	private int x;
+	private int y;
+
+	public BuyXGetPercentageDiscount(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	@Override
+	public void discount(Product product) {
+		if(product.getQuantity()>=x){
+			double reducedPrice=(product.getPrice()-product.getPrice()*y/100);
+			product.setPrice(reducedPrice);
+		}
+	}
+}
+
+
+
+
+
+
+public class Cart {
+	private List<Product> productList = new ArrayList<>();
+	private double totalCartValue;
+	private Discount discount;
+
+
+	public void addProduct(Product product) {
+		if(discount != null){
+			discount.discount(product);//apply offer
+		}
+		productList.add(product);
+	} 
+	
+	public void setDiscount(Discount discount) {
+		this.discount = discount;
+	}
+
+	public int getProductCount(){
+		return productList.size();
+	}
+	
+	public double getTotalCartValue(){
+		if(productList.size()> 0){
+			for(Product p: productList){
+				totalCartValue=totalCartValue+p.getPrice()*p.getQuantity();
+			}
+		}
+			
+		return totalCartValue;
+	}
+}
+
+	 

@@ -1,0 +1,352 @@
+Agenda 
+---------
+100 hr 
+
+module 1: core java
+
+module 2: tools
+
+module 3: JEE java enterprise edition
+	servlet jsp ejb hibernate
+	Spring mvc : servlet 
+
+		REST
+		
+module 4: Jdbc vs Hibernate/Entity
+		ORM
+	  Mongodb vs Moogoose
+				oo wrapper 
+module 5: Spring core
+		DI loose coupling
+		
+module 6: Spring boot
+		simplificaiton of spring 
+		
+
+module 7: Microservice
+	
+module 8: Docker k8s
+
+module 9: Final project
+
+
+tools required :
+================
+
+jdk 21
+intellij community edition	
+git
+maven
+
+
+
+hibernate (ORM) No it will not work for mongodb/cass NoSQL X
+is only for RDBMS
+
+
+mysql 8/ posgress
+
+postman
+
+mongodb
+
+docker for desktop
+
+local k8s cluster
+
+kubedum: admin
+
+minikube, kind : sw dev
+
+
+aws/gcp account
+
+
+
+
+Module 1: Core Java
+====================
+
+This week:
+--------------
+Session 1: Object Orientation, JVM architecture
+Session 2: Advance Object Orientation with Java
+Session 3: IO and Exception handling
+Session 4: Collections and Generics
+
+
+
+
+Session1: 
+============
+Quick recap
+
+intro to syllabus
+sw intallation : jdk 21, ide, maven, git
+
+* how java works, jvm basics
+	sc---> byte code---> jvm
+			exe No
+			
+			
+      code : 20 java classes
+      	.class 20
+      	
+      package: jar war ear
+      zip
+      	
+      	* jar : java archive-- core java project , spring boot , ms
+      	
+      	  war : web archive- servlet jsp based project  ke liye
+      	
+      	  ear: enteripse arch: EJB(distibuted computing) based 
+      	 
+      	 Java 1994--2024
+      	 
+      	 
+      	 
+      	 
+* creating classes objects
+
+* ctr init block ,static init block static method
+
+* singleton basic idea
+
+* how it stored in memory
+
+	Car car=new Car();
+	hashcode: is not the actual addrss of the object
+	but it is created using by actual address
+	
+	=> by default 2 object would have diff hashcode
+	
+	Note: address can not be change
+	but hashcode can be change
+	
+	
+	heap: heap app
+	
+	stack: per thread
+	
+	method area: per app
+	
+	
+	C/C++ u can play on actual address of data or object
+	java dont give accessablity to that
+	
+	* GC, Algo
+	C++ destructor 
+	Java no destructor
+	
+	
+* arrary of primitive and objects
+
+	array of object
+	
+	Car[]cars=new Car[5];//actually u have 0 object of car
+	
+* relationship bw the objects
+	is a
+	has a
+	is a
+	
+* writing loosely coupled application
+	amit is moving from LN to Noida using metro
+	
+
+session 2:
+=========
+
+* visibility modifier
+
+* inheritance, type of inhertiance
+
+* relationship bw the objects
+	is a
+	has a
+	is a
+* polymorphism
+
+* conversion and casting in case of objects
+
+* covariant returns
+
+super keyword, Method overriding(Dynamic method dispatch)
+
+final keyword
+
+Abstract keywrod, Definition
+
+implementation of an interface
+
+using interface
+interface and multiple inheritance
+interface to share constants, Inner classes
+when to use interface when to use classes
+
+Object class
+
+String class, StringBuffer StringBuilder, 
+Wrapper classes,primitive wrapper classes
+
+immutability, autoboxing
+
+https://www.youtube.com/playlist?list=PLv2-IhRmhbyQK19NcFRRJbK9Xf2YX_BgW
+
+
+
+
+
+
+ class A{
+  private int i=7;
+  
+  	void foo(){
+  		 int k=66;//local varibale
+  	
+  	}
+}
+
+
+class A{
+
+}
+
+
+class B extends A{
+}
+
+class C extends A{
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*
+*private default protected public
+data/method
+
+class: default public
+
+public class A{
+
+}
+
+class : private
+
+
+outer class not possible
+private class Foo{		X
+}
+
+outer class not possible
+protected class Foo{   X
+}
+
+
+
+inner class 
+class A{
+
+private class Foo{
+}
+
+}
+
+package:
+---------
+used to orgainised the code
+
+	face rec system
+	aif
+	
+	mvc
+	Amit ui : Face
+	
+	Sumit db: Face
+	
+	controller
+	
+	cbre
+	
+and 
+it is used to achive better encapsulation
+
+
+how to fight with chnage
+how to write woundeerful code
+so that u can fight with chanage req?
+
+
+loose coupling and high cohesion
+
+loose coupling 
+
+A			B
+
+
+high cohesion
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
