@@ -3,47 +3,49 @@ package com.session3.string_demo;
 
 public class A_AllAboutStringClass {
     public static void main(String[] args) {
-        //how string stored in merory, basics interview questions
+        //String is the only class in java for which new operation is not requation
+        //string are immutable
         //string vs string builder vs stringbuffer
 
-//        System.out.println(Runtime.getRuntime().availableProcessors());
 
-
-        String s="a"+"b"+"c";
-        //vs
-
-//        String data= new StringBuilder().append("a").append("b").append("c").toString();
+//        String s="india";
+//        String s2=new String("india");
 //
-//        String data2 = "raj";// can u reverse a string?
+//        if(s==s2)
+//            System.out.println("are eq");
+//        else
+//            System.out.println("not eq");
+
+
+//        String s="india";
+//        String s2=new String("india");
 //
-//        String data3=new StringBuilder().append("raj").reverse().toString();
+//        if(s.equals(s2))
+//            System.out.println("are eq");
+//        else
+//            System.out.println("not eq");
+
+
+//        String s="india";
+//        String s2="india";
 //
+//        if(s==s2)
+//            System.out.println("are eq");
+//        else
+//            System.out.println("not eq");
+
+        //string vs string builder vs stringbuffer
+
+        String s="foo"+"bar"+"car"+"jar";//this is a bad code
+
+       // StringBuffer thread safe but slow syn
+        //StringBuilder it is not thraed safe.. it is better in performance
+
+        //
+//        String s2=new StringBuilder().append("foo").append("bar").append("jar").append("car").toString();
 //
-
-//       int value= new StringBuilder("foo").toString().length();
-//
-//        System.out.printf("value:" + value);
-
-//       int value2= new StringBuilder(new Random().nextInt(100)).append("raja").toString().length();
-//        System.out.println("right now : "+value2);
-
-
-
-
-
-//        String a=new String("foo");
-//        a= a.toUpperCase();
-//        System.out.printf("result "+ a);
-
-
-
-//        String a1=new String("raja");
-//        String a2="raja";
-//        if(a1==a2){
-//            System.out.println("same");
-//        }else{
-//            System.out.printf("not same");
-//        }
+//        String data="i love java";
+//        String data2=new StringBuilder().append("i love java").reverse().toString();
 
 
     }

@@ -60,14 +60,18 @@ SOLID dp
 
 * String class, StringBuffer StringBuilder
 
-* Wrapper classes,primitive wrapper classes
+* Wrapper classes,primitive wrapper classes (Self study)
 
 * Excption handling
+-------------------
 	keywords
 	checked ex vs unchecked ex
 	some common ex in java
 	user define exceptions
 	gpp
+	
+	
+	
 	
 * java collections
 
