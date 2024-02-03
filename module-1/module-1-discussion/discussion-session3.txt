@@ -1,0 +1,123 @@
+Agenda 
+---------
+what is encapsulation with ex
+
+session 3 and session 4
+
+* interface vs abstract class
+	using interface
+	interface and multiple inheritance
+	interface to share constants
+	
+	when to use interface when to use classes
+	
+Yes
+abstract class A{}
+
+interface		 abs 		class		final
+
+
+
+
+Welcome back
+let java again!
+
+when i should go for interface and when for abs class
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SOLID dp
+
+* final keyword
+
+
+* Object class
+
+
+
+* String class, StringBuffer StringBuilder
+
+* Wrapper classes,primitive wrapper classes
+
+* Excption handling
+	keywords
+	checked ex vs unchecked ex
+	some common ex in java
+	user define exceptions
+	gpp
+	
+* java collections
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
