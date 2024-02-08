@@ -8,22 +8,29 @@ public class D_SortingUserDefineObject {
 		
 		List<Employee>employees=new ArrayList<>();
 
-		employees.add(new Employee(123,	"zen", "delhi", 45000.00));
+		employees.add(new Employee(123,	"ekta", "delhi", 45000.00));
 		employees.add(new Employee(13,	"sumit", "noida", 42000.00));
-		employees.add(new Employee(93,	"sumit", "banglore", 49000.00));
+		employees.add(new Employee(93,	"amit", "banglore", 60000.00));
 		employees.add(new Employee(939,	"amit", "chennai", 59000.00));
 		
 		System.out.println("---printing all emps as it is-------------");
 
-		printAll(employees);
-		Collections.sort(employees);
-		System.out.println("---sorted as per id----------");
+//		printAll(employees);
+//		Collections.sort(employees);//natural sort
+//		System.out.println("sorted as per id");
+
+		System.out.println("sorted as per name");
+		Collections.sort(employees,new NameSorterThenSalarySorter());
 		printAll(employees);
 
-		//Collections.sort(employees, ( o1,  o2) -> o1.getName().compareTo(o2.getName()));
-		Collections.sort(employees, new NameSorterThenSalarySorter());
-		System.out.println("---sorted as per name-----------");
-		printAll(employees);
+//		Collections.sort(employees);
+//		System.out.println("---sorted as per id----------");
+//		printAll(employees);
+//
+//		//Collections.sort(employees, ( o1,  o2) -> o1.getName().compareTo(o2.getName()));
+//		Collections.sort(employees, new NameSorterThenSalarySorter());
+//		System.out.println("---sorted as per name-----------");
+//		printAll(employees);
 	}
 
 	private static void printAll(List<Employee> employees) {

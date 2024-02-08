@@ -1,5 +1,7 @@
 package com.session4.ex0.object_class_java.doubts;
 
+import java.util.*;
+
 public class DemoOfAllKindOfIterator {
 
     public static void main(String[] args) {

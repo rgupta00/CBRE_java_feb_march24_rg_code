@@ -16,13 +16,17 @@ class NameSorterThenSalarySorter implements Comparator<Employee>{
 	public int compare(Employee o1, Employee o2) {
 		int value= o1.getName().compareTo(o2.getName());
 		if(value==0){
-			value= Double.compare(o2.getSalary(), o1.getSalary());
+			value=Double.compare(o2.getSalary(), o1.getSalary());
 		}
 		return value;
 	}
 }
 
-public class Employee implements Comparable<Employee> {
+//Comparable and comparator
+//Natural sort Comparable
+//and extra sort seq ke liye comparator
+
+public class Employee implements Comparable<Employee>{
 	private int id;
 	private String name;
 	private String city;
@@ -109,10 +113,9 @@ public class Employee implements Comparable<Employee> {
 		return true;
 	}
 
-
-	//it will be called by java ,
+	//java will call keraga
 	@Override
 	public int compareTo(Employee o) {
-		return Integer.compare(this.getId(), o.getId());
+		return Integer.compare(id, o.id);
 	}
 }

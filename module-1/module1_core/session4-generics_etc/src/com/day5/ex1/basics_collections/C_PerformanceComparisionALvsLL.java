@@ -8,7 +8,7 @@ public class C_PerformanceComparisionALvsLL {
 		List<Integer> list2=new LinkedList<Integer>();
 		//time taken: 1126 ms
 		//time taken: 7 ms
-		calculatePerformance(list);
+		calculatePerformance(list2);
 	}
 
 	//peroframce diff bw LL and AL
@@ -21,8 +21,8 @@ public class C_PerformanceComparisionALvsLL {
 		for(int i=0;i<1E5; i++) {
 			 list.add(0,i);
 		 }
-
 		long end=System.currentTimeMillis();
+
 		System.out.println("time taken: "+(end-start)+" ms");
 	}
 
