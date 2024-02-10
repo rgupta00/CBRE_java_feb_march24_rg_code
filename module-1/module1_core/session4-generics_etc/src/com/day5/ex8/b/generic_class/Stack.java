@@ -1,33 +1,43 @@
 package com.day5.ex8.b.generic_class;
 
-public class Stack {
+import java.lang.reflect.Array;
+import java.util.Comparator;
 
-	private int arr[];
+class OverFlowEx extends  RuntimeException{
+	public OverFlowEx(String message) {
+		super(message);
+	}
+}
+class UnderFlowEx extends  RuntimeException{
+	public UnderFlowEx(String message) {
+		super(message);
+	}
+}
+public class Stack<E extends Comparable<E>> {
+
+	private E arr[];
 	private int top;
 	private final int SIZE=5;
 	
-	public Stack() {
-		arr=new int[SIZE];
+	public Stack(Class<E> clazz, int initCap) {
+		arr = (E[]) Array.newInstance(clazz, initCap);
 		top =-1;
 	}
 	
-	public void push(int data) {
+	public void push(E data) {
 		if(top==SIZE-1) {
-			System.out.println("overflow....");
+			throw  new OverFlowEx("size is full");
 		}else {
 			arr[++top]=data;
 		}
 	}
-	public int pop() {
+	public E pop() {
 		if(top==-1) {
-			return -999;
+			throw  new UnderFlowEx("stack is empty");
 		}else {
 			return arr[top--];
 		}
 	}
 
-	
-	public int peek() {
-		return 0;
-	}
+
 }

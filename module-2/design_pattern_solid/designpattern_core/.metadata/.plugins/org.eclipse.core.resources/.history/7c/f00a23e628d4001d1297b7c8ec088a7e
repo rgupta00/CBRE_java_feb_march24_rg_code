@@ -1,0 +1,18 @@
+package com.a.basics_oo.b;
+
+public class Main {
+
+	public static void main(String[] args) {
+		
+		Account account=new Account();
+		account.id=55;
+		
+		
+		account.name="Raj";
+		account.balance=500;
+		
+		account.id=4;
+		System.out.println(account);
+		
+	}
+}

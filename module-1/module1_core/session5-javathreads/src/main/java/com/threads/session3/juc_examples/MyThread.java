@@ -1,7 +1,5 @@
 package com.threads.session3.juc_examples;
 
-import jdk.internal.org.objectweb.asm.tree.IincInsnNode;
-
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;

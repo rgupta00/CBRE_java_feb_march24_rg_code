@@ -1,0 +1,15 @@
+
+
+You need to understand RMI first (head first)
+Hello  world application using RMI
+
+bank application , distributed app
+
+client					server
+						BL to check atm card detais
+						
+						class AtmCard{
+client			----->				boolean isValid(String cardNo){
+							}
+						
+						}

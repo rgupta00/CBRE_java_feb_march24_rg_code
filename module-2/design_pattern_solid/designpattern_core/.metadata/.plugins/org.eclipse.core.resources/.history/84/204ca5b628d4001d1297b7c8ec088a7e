@@ -1,0 +1,5 @@
+package com.a.basics_oo.e_sol;
+
+public interface Payable {
+	public double getPay();
+}

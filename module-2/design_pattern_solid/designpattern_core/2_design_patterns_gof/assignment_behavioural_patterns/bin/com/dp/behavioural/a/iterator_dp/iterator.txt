@@ -1,0 +1,13 @@
+
+	Iterator design pattern:
+	------------------------
+	=> iterator pattern allows for the traversal through the elements
+	 in a grouping of objects via a standardized interface. 
+
+	=> An Iterator interface defines the actions that can be performed.
+
+	=>  These actions include being able to traverse the objects and also obtain the objects
+
+
+	Example : write our own iterator by implementing java.util.Iterator
+		 hasNext(), next(), and remove() methods

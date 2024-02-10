@@ -1,0 +1,11 @@
+package com.a.basics_oo.d;
+
+public class EmployeePaymentProceseingSystem {
+
+	public static void paymentProceseingSystem(Employee employee) {
+		System.out.println("payment processing system");
+		
+		System.out.println(employee.getPay());
+		
+	}
+}

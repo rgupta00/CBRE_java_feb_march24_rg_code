@@ -1,0 +1,16 @@
+package com.a.basics_oo.d;
+
+public class EmployeePaymentProceseingSystemTester {
+
+	public static void main(String[] args) {
+		Employee employee=new FullTimeEmployee(2, "raj", 700000);
+		
+		EmployeePaymentProceseingSystem employeePaymentProceseingSystem=
+				new EmployeePaymentProceseingSystem();
+		
+		employeePaymentProceseingSystem.paymentProceseingSystem(employee);
+
+		
+	}
+
+}

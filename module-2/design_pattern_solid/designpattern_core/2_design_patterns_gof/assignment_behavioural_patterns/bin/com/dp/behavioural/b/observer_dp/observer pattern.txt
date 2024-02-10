@@ -1,0 +1,8 @@
+
+Observer design pattern:
+========================
+
+	=> Observer pattern in java is one of the most important design patterns. 
+	=> The concept behind the Observer design pattern is the basis for PubSub, event and non blocking based systems
+	
+	

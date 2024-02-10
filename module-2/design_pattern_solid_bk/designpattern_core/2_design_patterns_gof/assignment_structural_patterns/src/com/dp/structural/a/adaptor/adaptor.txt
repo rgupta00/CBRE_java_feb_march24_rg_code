@@ -1,0 +1,32 @@
+
+Adapter Pattern
+================
+	==> It helps in integrating two modules with different incompatible interfaces. 
+	==> The Adapter pattern is used so that two unrelated interfaces can work together
+	==> The joining between them is called an Adapter. 
+	==> This is something like we convert interface of one class into interface expected by the client. 
+	==>  Way to implement adaper
+		=> Using inheritance: A class adapter 
+		=> User composition: An object adapter
+
+	Use cases:
+	----------
+	1. Most important task of an Adapter is to transfer data between applications or modules.
+	2. Very common task is to parse the information from one kind to the other
+	3. Convert from one type to the other
+	4. Some times adapters even validate the data so that right data flows into the application 
+	from external applications.
+
+	=> Having adapters help in keeping the conversion code separate so that the parsing functionality
+	 is not leaking into the core modules of our application.
+
+	=> Another important advantage of having an adapter is that when there is a 
+	change in outside interface, our core modules does not get affected. 
+	Only adapters need to be modified. So, this helps in restricting the changes to 
+	 adapter module alone and rest of application does not get affected. 
+
+
+
+
+	Convert the interface of a class into another interface clients expect. 
+	Adapter lets classes work together that couldn't otherwise because of incompatible interfaces.

@@ -1,0 +1,28 @@
+Factory Method pattern
+========================
+	=> Defind an interface for creating an object, but let subclass decide which 
+		object to instantiate, Factory method let a class defer instantiation to subclass using 
+		inheritance.
+
+Implementation:
+---------------
+	=> provide an interface for creating an oblject here do not consider the word interface as java interface. 
+	It simply mean to provides a contract / method to create an object
+
+	=> let the subclass decide what exact object ot instantiate- This pattern involve "inheritance"
+
+
+Implementation:
+---------------
+	=> provide an interface for creating an oblject here do not consider the word interface as java interface. 
+	It simply mean to provides a contract / method to create an object
+
+	=> let the subclass decide what exact object ot instantiate- This pattern involve "inheritance"
+
+	=> let we write an batch file processor
+	 steps: 1. open an file
+		2. choose a parser
+		3. use parser to get List of records
+		4. process record ie put to db
+		5. write summery
+		6. close file

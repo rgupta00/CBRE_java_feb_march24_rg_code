@@ -1,0 +1,21 @@
+package com.a.basics_oo.d_sol;
+
+public class EmployeePaymentProceseingSystemTester {
+
+	public static void main(String[] args) {
+//		Employee employee=new FullTimeEmployee(2, "raj", 700000);
+//		
+//		EmployeePaymentProceseingSystem employeePaymentProceseingSystem=
+//				new EmployeePaymentProceseingSystem();
+//		
+//		employeePaymentProceseingSystem.employeePaymentProceseingSystem(employee);
+
+		Payable payable =new Invoice("rajiv gupta", 4000, 20);
+
+		EmployeePaymentProceseingSystem employeePaymentProceseingSystem = 
+				new EmployeePaymentProceseingSystem();
+
+		employeePaymentProceseingSystem.employeePaymentProceseingSystem(payable);
+	}
+
+}

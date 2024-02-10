@@ -1,0 +1,31 @@
+
+decorator pattern / wrapper pattern 
+=================================
+
+	=> Decorator pattern helpful in adding behaviour to objects statically or dynamically.
+
+	=> Decorator pattern helps in extending the functionality of the objects without
+	 effecting the behaviour of other objects.
+
+	=> Decorator adhering to the design principle of Open for extension and closed for modification
+
+	=> In the Decorator pattern, a decorator object is wrapped around the original object
+
+ 	=> This is typically achieved having the original object as a member
+		 of the decorator, with the decorator forwarding the 
+		requests to the original object and also implementing the new functionality
+
+	==> The decorator must conform to the interface of the original object
+		 (the object being decorated) 
+
+
+	=> Simple greet application:
+	-----------------------------
+	good morning
+	sp good morning
+	very sp .....
+	
+	You need to find it into io package
+	Greeting g=new VerySpecialGreeting(new SpecialGreeting(new SimpleGreeting()));
+	
+	

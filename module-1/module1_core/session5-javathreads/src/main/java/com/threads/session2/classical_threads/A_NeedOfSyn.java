@@ -66,23 +66,67 @@ class Foo{
 //
 //}
 
+//class Printer{
+//    private Semaphore semaphore=new Semaphore(1);//ReentrantLock vs ReadWriteLock
+//
+//    public void printLetter(String letter)throws InterruptedException{
+//        try{
+//            semaphore.acquire();
+//            System.out.print("[");
+//            try{
+//                Thread.sleep(1000);
+//            }catch (InterruptedException e){}
+//            System.out.println(letter+ "]");
+//        }finally {
+//            semaphore.release();
+//        }
+//    }
+//
+//}
+//class Printer{
+//    //synchronized method vs synchronized block
+//    public  void printLetter(String letter)throws InterruptedException {
+//
+//        //
+//        ///
+//        //
+//       synchronized (this){
+//           System.out.print("[");
+//           try {
+//               Thread.sleep(1000);
+//           } catch (InterruptedException e) {
+//           }
+//           System.out.println(letter + "]");
+//       }
+//        //
+//        ///
+//    }
+//}
+
+
+//the thread that is waiting max should get the thread first
+//synchronized vs Java 5: JUC: Lock, ReentractLock
+
 class Printer{
-    private Semaphore semaphore=new Semaphore(1);//ReentrantLock vs ReadWriteLock
+    private Lock lock=new ReentrantLock(true);
+    public  void printLetter(String letter)throws InterruptedException {
 
-    public void printLetter(String letter)throws InterruptedException{
-        try{
-            semaphore.acquire();
+        try {
+            lock.lock();
             System.out.print("[");
-            try{
+            try {
                 Thread.sleep(1000);
-            }catch (InterruptedException e){}
-            System.out.println(letter+ "]");
+            } catch (InterruptedException e) {
+            }
+            System.out.println(letter + "]");
         }finally {
-            semaphore.release();
+            lock.unlock();
         }
-    }
 
+
+    }
 }
+
 class Client implements Runnable{
     private String letter;
     private Printer printer;

@@ -13,33 +13,22 @@ class JobWithEx implements  Runnable{
         }
     }
 }
-class GenericExHandler implements Thread.UncaughtExceptionHandler{
-    @Override
-    public void uncaughtException(Thread t, Throwable e) {
-        System.out.println(t.getName()+": "+ e.getCause()+" is is generic ex handler");
-    }
-}
-
 class MyExHandler implements Thread.UncaughtExceptionHandler{
     @Override
     public void uncaughtException(Thread t, Throwable e) {
         System.out.println(t.getName()+": "+ e.getCause());
     }
 }
+
 public class D_HandingExInThreads {
 
     public static void main(String[] args) {
 
-        //call back
-        Thread.setDefaultUncaughtExceptionHandler(( t,  e)-> System.out.println(t.getName()+": "+ e));
+          JobWithEx job=new JobWithEx();
+          Thread thread=new Thread(job);
+          thread.setUncaughtExceptionHandler(new MyExHandler());
+          thread.start();
 
-
-//            Thread.setDefaultUncaughtExceptionHandler
-//                    (( t,  e) -> System.out.println(t.getName()+": "+ e.getCause()));
-
-            Thread t=new Thread(new JobWithEx(),"test1");
-            t.setUncaughtExceptionHandler(new MyExHandler());
-            t.start();
 
 
 

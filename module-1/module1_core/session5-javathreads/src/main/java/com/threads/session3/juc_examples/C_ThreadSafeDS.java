@@ -1,7 +1,5 @@
 package com.threads.session3.juc_examples;
 
-import com.sun.org.apache.xerces.internal.xs.LSInputList;
-
 import java.util.*;
 class Employee{
     private int id;
