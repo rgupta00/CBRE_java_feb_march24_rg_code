@@ -1,7 +1,5 @@
 package demo.java8.session1.ex0;
 
-import sun.rmi.log.LogInputStream;
-
 import java.util.stream.LongStream;
 
 //calculating prime no bw 1 to 1_000_0
@@ -18,6 +16,7 @@ class Prime{
 
 public class MotivationJava8 {
 	public static void main(String[] args) {
+		//java 8 traning session
 		//System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "8");
 		System.out.println(Runtime.getRuntime().availableProcessors());
 		//funcational/declerative (what to do) vs imparative (what to do , how to do?)
