@@ -16,6 +16,8 @@ implement Queue using LL
 //}
 
 //improved design
+//favour composition over inheritance
+
 class MyQueue {
     private LinkedList<String> list;
 

@@ -1,0 +1,8 @@
+crete table products
+(id int not null primary key auto_increment,
+name varchar(100) not null,
+price double not null
+);
+
+CREATE TABLE products (id int NOT NULL primary key AUTO_INCREMENT,name varchar(255) NOT NULL,
+price double not null);

@@ -1,5 +1,6 @@
 package demo.java8.session1.ex1;
 
+import java.util.Comparator;
 import java.util.function.Predicate;
 /*
           interface evalution

@@ -13,41 +13,47 @@ import java.io.Serializable;
 	=> what if 2 class loader load that class twice
 	=> best practices, effective java
 	=> using enum
- */
-final public class Singleton implements Cloneable, Serializable{
 
-	//java 1.4 bad solution
-	//java 1.5 good solution
-	private volatile  static Singleton singleton = null;// lazy vs eager way
 
-	private Singleton() {
-		System.out.println("ctr");
-	}
-
-	// t1 t2
-	public static Singleton getSingleton() {
-		if (singleton == null) {
-			synchronized (Singleton.class) {
-				if (singleton == null) {
-					singleton = new Singleton();//atomic
-				}
-			}
-		}
-		return singleton;
-	}
-
-	@Override
-	protected Object clone() throws CloneNotSupportedException {
-		//throw new CloneNotSupportedException();
-		return singleton;
-	}
-	
-	//call back : u just define this method ..jvm call this before de-ser
 	private Object readResolve() {
 		System.out.println("--------readResolve------------");
 		return singleton;
 	}
-	
+
+ */
+//Eager approach
+//public class Singleton{
+//    //Eager vs Laxy
+//    private static Singleton singleton=new Singleton();
+//
+//    private Singleton(){}
+//
+//    public static  Singleton getSingleton(){
+//        return singleton;
+//    }
+//
+//}
+
+//Lazy apprach
+//this pattern can be broken using java reflecation, using serilization, using clonnng
+final public class Singleton{
+    //Eager vs Laxy
+    private  volatile static Singleton singleton;
+
+    private Singleton(){}
+
+    //race condition t1 t2 performance :(
+    public  static  Singleton getSingleton(){
+        if(singleton==null){
+            synchronized (Singleton.class) {
+               if(singleton==null){
+                   singleton = new Singleton();
+               }
+            }
+        }
+        return singleton;
+    }
+
 }
 
 //int i=5;

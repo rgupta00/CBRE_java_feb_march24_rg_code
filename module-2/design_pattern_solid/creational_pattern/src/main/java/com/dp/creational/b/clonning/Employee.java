@@ -48,17 +48,18 @@ class Employee  implements Cloneable{
 		this.hireDay = hireDay;
 	}
 
-	@Override
-	public Object clone() throws CloneNotSupportedException {
-		Employee clonnedObject= (Employee) super.clone();
-		clonnedObject.hireDay=(Date) hireDay.clone();
-		return clonnedObject;
-		
-	}
+//	@Override
+//	public Object clone() throws CloneNotSupportedException {
+//		return super.clone();
+//	}
 	
 	
 }
 
+
+//Employee clonnedObject= (Employee) super.clone();
+//clonnedObject.hireDay=(Date) hireDay.clone();
+//		return clonnedObject;
 
 
 
