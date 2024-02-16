@@ -1,7 +1,5 @@
 package demo.java8.session2.ex7;
 
-import sun.rmi.runtime.Log;
-
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongBinaryOperator;
