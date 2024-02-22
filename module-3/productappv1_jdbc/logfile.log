@@ -1,0 +1,8 @@
+INFO  | 2024-02-22 12:30:01 | [main] productapp.Main (Main.java:15) - it is logging message
+INFO  | 2024-02-22 12:35:43 | [main] productapp.Main (Main.java:16) - it is logging message
+ERROR | 2024-02-22 12:35:43 | [main] productapp.Main (Main.java:21) - some error while converting string to integer For input string: "55X"
+ERROR | 2024-02-22 12:36:14 | [main] productapp.Main (Main.java:21) - some error while converting string to integer For input string: "55X"
+INFO  | 2024-02-22 12:39:01 | [main] productapp.Main (Main.java:16) - it is logging message
+ERROR | 2024-02-22 12:39:01 | [main] productapp.Main (Main.java:21) - some error while converting string to integer For input string: "55X"
+ERROR | 2024-02-22 13:41:47 | [main] service.ProductServiceImpl (ProductServiceImpl.java:27) - some database error You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'fom products' at line 1
+ERROR | 2024-02-22 13:47:02 | [main] service.ProductServiceImpl (ProductServiceImpl.java:27) - some database error You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'fom products' at line 1
