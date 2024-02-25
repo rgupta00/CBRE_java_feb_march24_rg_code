@@ -11,7 +11,7 @@ public class Tester {
         EmployeeService employeeService=new EmployeeServiceImpl();
 
         Employee e=new Employee("amit",6700, "Mkt");
-//        employeeService.addEmployee(e);
+        employeeService.addEmployee(e);
 //
 //        List<Employee> employees=employeeService.getAll();
 //        employees.forEach(emp-> System.out.println(emp));

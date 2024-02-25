@@ -25,6 +25,7 @@
 		<property name="connection.pool_size">50</property>
 		<!-- <property name="current_session_context_class">thread</property> -->
 
+<!--		<mapping class="com.empapp.moreann.Employee" />-->
 		<mapping class="com.empapp.basics.Employee" />
 	</session-factory>
 </hibernate-configuration>

@@ -12,7 +12,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "employee_table")
+@Table(name = "employee_table_new")
 public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
