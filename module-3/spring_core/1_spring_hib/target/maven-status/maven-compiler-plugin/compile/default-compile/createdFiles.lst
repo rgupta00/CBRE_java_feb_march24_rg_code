@@ -1,0 +1,8 @@
+com\productapp\model\entities\Product$ProductBuilder.class
+com\productapp\controller\Main.class
+com\productapp\model\service\ProductService.class
+com\productapp\model\entities\Product.class
+com\productapp\model\dao\ProductDao.class
+com\productapp\model\dao\impl\ProductDaoImplHib.class
+com\productapp\model\service\ProductServiceImpl.class
+com\productapp\exceptions\ProductNotFoundException.class

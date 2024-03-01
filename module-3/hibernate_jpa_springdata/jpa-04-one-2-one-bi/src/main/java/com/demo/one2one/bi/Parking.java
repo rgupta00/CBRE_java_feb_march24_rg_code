@@ -1,6 +1,8 @@
 package com.demo.one2one.bi;
 
 import jakarta.persistence.*;
+import org.hibernate.engine.internal.Cascade;
+
 @Entity
 @Table(name = "p_table")
 public class Parking {
@@ -8,7 +10,8 @@ public class Parking {
 	private int partingId;
 	private String parkingLocation;
 
-	@OneToOne
+	@JoinColumn(name = "empId_fk")
+	@OneToOne(cascade = CascadeType.ALL)
 	private Employee employee;
 
 	public Parking(String parkingLocation) {

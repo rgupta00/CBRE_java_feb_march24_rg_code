@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+
+        <!--i need to tell spring who depend on what for that we need to use config file xml-->
+        <!-- scope="prototype" vs  scope="singleton"  -->
+        <!--early created-->
+        <!--autowiring of the beans-->
+
+        <bean id="foo" class="com.demo.Car" autowire="byType">
+
+        </bean>
+    <!--   autowire-candidate="false"-->
+        <bean id="t1" class="com.demo.MrfTyre" primary="true"/>
+       <bean id="t2" class="com.demo.CeatTyre"/>
+
+        <!--spring profile 100% loose coupling-->
+</beans>

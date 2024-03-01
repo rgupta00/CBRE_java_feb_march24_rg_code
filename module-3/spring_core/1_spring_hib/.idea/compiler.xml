@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="demo3_bankapp_04" />
+        <module name="demo3_bankapp_05" />
+        <module name="15_bankapp_with_db_aop" />
+        <module name="17_bankapp_with_db_aop_jdbcTemplate_javaconfig" />
+        <module name="demo3_bankapp_06" />
+        <module name="demo3_bankapp_07" />
+        <module name="11_bankapp_with_db" />
+        <module name="07_demo3_bankapp" />
+        <module name="demo2_with_annotation_02" />
+        <module name="demo2_with_annotation_andjavaconfig_03" />
+      </profile>
+    </annotationProcessing>
+  </component>
+</project>

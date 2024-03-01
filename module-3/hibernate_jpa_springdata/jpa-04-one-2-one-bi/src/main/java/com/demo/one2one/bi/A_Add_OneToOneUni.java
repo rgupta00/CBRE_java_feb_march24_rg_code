@@ -47,11 +47,11 @@ public class A_Add_OneToOneUni {
 			em.persist(parking4);
 			em.persist(parking5);
 
-			em.persist(employee1);
-			em.persist(employee2);
-			em.persist(employee3);
-			em.persist(employee4);
-			em.persist(employee5);
+//			em.persist(employee1);
+//			em.persist(employee2);
+//			em.persist(employee3);
+//			em.persist(employee4);
+//			em.persist(employee5);
 
 
 
