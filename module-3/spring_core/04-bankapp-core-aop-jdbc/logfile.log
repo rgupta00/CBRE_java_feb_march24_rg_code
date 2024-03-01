@@ -1,0 +1,31 @@
+WARN  | 2024-02-29 12:35:48 | [main] support.AbstractApplicationContext (AbstractApplicationContext.java:591) - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'accountService' defined in file [C:\CBRE_java_feb_march24_rg_code\module-3\spring_core\spring_basics\target\classes\com\bankapp\service\AccountServiceImpl.class]: Unsatisfied dependency expressed through constructor parameter 0; nested exception is org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'com.bankapp.dao.AccountDao' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+WARN  | 2024-02-29 12:36:34 | [main] support.AbstractApplicationContext (AbstractApplicationContext.java:591) - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'accountService' defined in file [C:\CBRE_java_feb_march24_rg_code\module-3\spring_core\spring_basics\target\classes\com\bankapp\service\AccountServiceImpl.class]: Unsatisfied dependency expressed through constructor parameter 0; nested exception is org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'com.bankapp.dao.AccountDao' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+INFO  | 2024-02-29 13:05:25 | [main] service.AccountServiceImpl (AccountServiceImpl.java:66) - depsit method is called
+INFO  | 2024-02-29 13:06:58 | [main] service.LoggingAspect (LoggingAspect.java:23) - deposit method is called
+INFO  | 2024-02-29 13:10:21 | [main] service.LoggingAspect (LoggingAspect.java:20) - deposit method is called
+INFO  | 2024-02-29 13:18:20 | [main] service.LoggingAspect (LoggingAspect.java:20) - deposit method is called
+INFO  | 2024-02-29 13:19:01 | [main] service.LoggingAspect (LoggingAspect.java:20) - deposit method is called
+INFO  | 2024-02-29 13:19:01 | [main] service.LoggingAspect (LoggingAspect.java:20) - deposit method is called
+INFO  | 2024-02-29 13:22:01 | [main] service.LoggingAspect (LoggingAspect.java:23) - deposit method is called 
+INFO  | 2024-02-29 13:22:01 | [main] service.LoggingAspect (LoggingAspect.java:23) - withdraw method is called 
+INFO  | 2024-02-29 13:22:39 | [main] service.LoggingAspect (LoggingAspect.java:24) - deposit method is called 
+INFO  | 2024-02-29 13:22:39 | [main] service.LoggingAspect (LoggingAspect.java:24) - withdraw method is called 
+INFO  | 2024-02-29 13:23:16 | [main] service.LoggingAspect (LoggingAspect.java:24) - deposit method is called 
+INFO  | 2024-02-29 13:23:16 | [main] service.LoggingAspect (LoggingAspect.java:24) - withdraw method is called 
+INFO  | 2024-02-29 13:23:50 | [main] service.LoggingAspect (LoggingAspect.java:25) - deposit method is called 
+INFO  | 2024-02-29 13:23:50 | [main] service.LoggingAspect (LoggingAspect.java:25) - withdraw method is called 
+INFO  | 2024-02-29 13:25:33 | [main] service.LoggingAspect (LoggingAspect.java:25) - deposit method is called 
+INFO  | 2024-02-29 13:29:23 | [main] service.LoggingAspect (LoggingAspect.java:23) - deposit method is called 
+INFO  | 2024-02-29 13:34:27 | [main] service.LoggingAspect (LoggingAspect.java:21) -  method is started 
+INFO  | 2024-02-29 13:34:53 | [main] service.LoggingAspect (LoggingAspect.java:21) -  method is started 
+INFO  | 2024-02-29 13:34:53 | [main] service.LoggingAspect (LoggingAspect.java:24) - method is finished
+INFO  | 2024-02-29 13:34:53 | [main] service.LoggingAspect (LoggingAspect.java:21) -  method is started 
+INFO  | 2024-02-29 13:34:53 | [main] service.LoggingAspect (LoggingAspect.java:24) - method is finished
+INFO  | 2024-02-29 13:35:16 | [main] service.LoggingAspect (LoggingAspect.java:21) -  method is started 
+INFO  | 2024-02-29 13:35:16 | [main] service.LoggingAspect (LoggingAspect.java:24) - method is finished
+INFO  | 2024-02-29 13:36:10 | [main] service.LoggingAspect (LoggingAspect.java:21) -  method is started 
+INFO  | 2024-02-29 13:36:10 | [main] service.LoggingAspect (LoggingAspect.java:24) - method is finished
+INFO  | 2024-02-29 13:36:10 | [main] service.LoggingAspect (LoggingAspect.java:21) -  method is started 
+INFO  | 2024-02-29 13:36:10 | [main] service.LoggingAspect (LoggingAspect.java:24) - method is finished
+INFO  | 2024-02-29 13:38:03 | [main] service.LoggingAspect (LoggingAspect.java:27) - time taken to execute transfer method is 7 ms
+INFO  | 2024-02-29 13:38:34 | [main] service.LoggingAspect (LoggingAspect.java:27) - time taken to execute deposit method is 5 ms

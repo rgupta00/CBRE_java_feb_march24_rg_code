@@ -1,0 +1,2487 @@
+Spring with sprng boot workshop: 5 days
+___________________________
+
+Key topics:
+==================
+=> Understand Depdendency Injection
+=> bean wiring :xml, annoation, java configuraton
+=> Spring boot aop
+=> spring mvc basics
+=> REST basics
+=> Spring boot REST application
+=> Spring AOP
+=> Spring JDBCTemplate
+=> Spring data
+=> Spring boot web application, Spring MVC arch
+=>Spring boot Monotring and Logging
+=> Spring boot security
+=> spring boot profile
+=> spring boot actuator
+=> spring boot jdbcTemplate
+=> Spring Boot microservice architecture
+=> spring boot openfeign
+
+
+Day 1: session 1:
+____________________
+
+Understand Depdendency Injection
+_________________________________
+
+What is the need of spring framework?
+-----------------------------------
+
+
+Lets take a example:
+
+Rest 
+Controller <------------ Service layer <---------- persistance layer <------ SessionFactory
+
+ravi team		sumit team			kapil team
+
+what sping does it produce loose coupling between the layer 
+Take example lets say ravi team creating controller layer, sumit team is creating service layer and kapil team is
+creating persitance layer... now controller layer need service and service layer need persistance layer
+
+as we have design our application as per interface and we have use DI therefore kapil team can change implemenation
+of service layer ( let earlier they are using Jdbc now wnat to use hibernate ) without effectiving even a single line
+of code in Service layer (sumit team) do you not think it is great...
+
+beside that spring DI help to manage dependency of our project and make our project flexiable
+
+
+						---------- ProductDaoImplHib
+						|
+	ProductService <---------------- ProductDao-------ProductDaoImplJdbc
+						|
+						---------- ProductDaoImplUtil
+		
+public class Product {
+		private Integer id;
+		private String name;
+		private BigDecimal price;	
+}
+					
+
+
+public interface ProductDao {
+	public List<Product>getProducts();
+}
+
+
+public interface ProductDaoImplUtil implements ProductDao {
+	public List<Product>getProducts(){
+		//collection implementation ....
+	}
+}
+
+public interface ProductDaoImplJdbc implements ProductDao {
+	public List<Product>getProducts(){
+		//jdbc implementation ....
+	}
+}
+
+
+
+public interface ProductService {
+	public List<Product>getProducts();
+}
+
+
+
+public interface ProductServiceImpl  implements ProductService{
+
+	private ProductDao productDao;
+
+	public ProductServiceImpl(){
+		productDao=new ProductDaoImplUtil();   // or ProductDaoImplJdbc()
+	}
+
+
+	public List<Product>getProducts(){
+	// business logic
+	}
+}
+
+
+=> we have to change the implementation ...whenever we swap dao layer :(
+
+
+Spring BeanFactory vs ApplicationContext
+______________________________________
+
+ * BeanFactory:
+ 	 - light weight container , dont support many featues
+ 	  - dont use it
+ BeanFactory applicationContext=new XmlBeanFactory(new ClassPathResource("demo.xml"));
+ 
+ *  ApplicationContext 
+  	- more powerful
+    	ApplicationContext applicationContext=
+				new ClassPathXmlApplicationContext("demo.xml");
+				
+	ApplicationContext
+		-ClassPathXmlApplicationContext
+		-FileSystemXmlApplicationContext
+		-AnnotationConfigApplicationContext
+		-XMLWebApplicationContext
+
+
+spring bean configuration:
+________________________
+1. xml configuration
+2. annotation configuration
+3. java configuration
+
+
+
+
+Understand Aspect Oriented Programming
+______________________________________
+	* If i need to take training at some client location, infra is provided by that client
+		i need to only carray my laptop
+
+	* help to achive high cohesion
+
+
+ consider: we need to find how much time it take to execute code of service layer and do logging into a log file
+
+
+public interface ProductServiceImpl  implements ProductService{
+
+	private ProductDao productDao;
+
+	public ProductServiceImpl(){
+		productDao=new ProductDaoImplUtil();   // or ProductDaoImplJdbc()
+	}
+
+
+	public List<String>getProducts(){
+	//how much it take to execute and do logging too ....
+	// business logic
+	}
+}
+ 
+
+
+
+
+session 2:
+___________
+MVC design pattern
+
+
+
+History Spring boot : Summarized:
+_________________________________
+
+1.0.0: Support from Java 6 - 8
+1.3.0: Support from Java 7 - 8, additional configuration for Java 6 required
+2.0.0: Support from Java 8 - ...
+
+
+
+
+
+	Advantage of spring boot , configuration spring boot
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 	Advantage of spring boot
+	_____________________
+
+	=> Auto-Configuration 
+
+	=> Dependency Management
+
+	=> Externalized Configuration
+		bean can be configured through application.properties file 
+		without touching java or xml config
+
+	=> Production support
+		We get health checking, application and jvm metrics, 
+		jmx via http and a few more things for free
+
+	=> Runnable Jars
+		 We can package your application as a runnable jar with embedded tomcat
+		 included so it presents a self-contained deployment unit
+
+	=> Microservice
+
+
+	configuration spring boot
+	____________________
+
+	create spring boot project: choose web, jpa, derby....
+
+	//Configuration, @EnableAutoConfiguration and @ComponentScan
+
+
+
+	@SpringBootApplication
+	public class Application {
+	
+	  public static void main(String[] args) {
+	    ApplicationContext ctx = SpringApplication.run(Application.class, args);
+	
+	    System.out.println("Let's inspect the beans provided by Spring Boot:");
+	
+	    String[] beanNames = ctx.getBeanDefinitionNames();
+	    Arrays.sort(beanNames);
+	    for (String beanName : beanNames) {
+	        System.out.println(beanName);
+	    }
+	  }
+	
+	}
+
+	spring-boot:run
+
+
+	Spring boot ApplicationRunner and CommandLineRunner:
+	----------------------------------------
+
+	@Component
+	public class ApplicationRunnerBean implements ApplicationRunner {
+	@Override
+	public void run(ApplicationArguments args) throws Exception {
+		String collectStr = Arrays.stream(args.getSourceArgs()).collect(Collectors.joining(","));
+		System.out.println(collectStr);
+	}
+
+	}
+https://www.concretepage.com/spring-boot/spring-boot-commandlinerunner-and-applicationrunner-example#:~:text=The%20difference%20between%20CommandLineRunner%20and,spring%20ApplicationArguments%20as%20an%20argument.&text=To%20execute%20them%20in%20an,Order%20annotation%20or%20Ordered%20interface.
+	Hello world:
+	-----------
+
+	
+	@RestController
+	public class HelloRestController {
+		
+		@RequestMapping("/hello")
+		public String hello(){
+			return "spring boot";
+		}
+           }  
+	
+	public class Product {
+		private Integer id;
+		private String name;
+		private BigDecimal price;	
+         }
+
+	
+	
+	@GetMapping("products/{id}")
+	public Book getProductById(@PathVariable(name = "id")int id) {
+		return new Product(id, "java basics book", new BigDecimal(300));
+	}
+
+
+
+
+
+	application.properties
+	---------------------------
+	server.servlet.context-path=/productapp
+	server.port=8080
+
+
+
+Running spring boot :
+____________________
+
+	eclipse plugin
+	spring initilizer
+	spring cli
+
+	https://www.journaldev.com/8195/spring-boot-cli-setup-and-helloworld-example
+
+	spring init -n=jpa-one-to-one-demo -d=web,jpa,mysql --package-name=com.example.jpa demoproj
+
+
+bannner:
+________________
+spring.banner.location=classpath:banner.txt
+
+https://devops.datenkollektiv.de/banner.txt/index.html
+
+
+
+java -jar  jpa_demo2-0.0.1-SNAPSHOT.jar --server.port=8050
+
+https://docs.spring.io/spring-boot/docs/1.1.2.RELEASE/reference/html/common-application-properties.html
+
+
+
+Note:Spring boot config: EnableAutoConfiguration
+________________________________________________
+
+disable all database related auto configuration in spring-boot
+__________________________________________________________
+
+@Configuration
+@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, DataSourceTransactionManagerAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
+@Profile ("client_app_profile_name")
+public class ClientAppConfiguration {
+    //it can be left blank
+}
+
+
+
+
+Day 2: 
+
+session 1: spring boot rest crud application 
+___________________________________________
+
+Rest 
+Controller <------------ Service layer <---------- persistance layer <------ SessionFactory
+
+
+
+
+step 1: application.properties
+_______________________
+server.servlet.context-path=/productapp
+server.port=8082
+
+spring.datasource.url=jdbc:mysql://localhost:3306/demoms?useSSL=false
+spring.datasource.username=root
+spring.datasource.password=root
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+spring.jpa.hibernate.ddl-auto=update
+logging.level.org.springframework.web: DEBUG
+logging.level.org.hibernate: ERROR
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+
+
+UserInterface.PRODUCT_ADD_SUCCESS=product added successfully
+UserInterface.PRODUCT_UPDATE_SUCCESS=product added successfully
+UserInterface.PRODUCT_DELETE_SUCCESS=product added successfully
+
+Service.PRODUCT_NOT_EXISTS=Product not exist
+
+
+in case of h2 database :
+---------------------
+
+server.port=8090
+server.servlet.context-path=/productapp
+spring.h2.console.enabled=true
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=password
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+# Custom H2 Console URL
+spring.h2.console.path=/h2
+
+spring.jpa.hibernate.ddl-auto=update
+
+logging.level.org.springframework.web: DEBUG
+logging.level.org.hibernate: ERROR
+
+spring.jpa.show-sql=true 
+
+
+
+
+
+Step 2: dao layer
+_______________________
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@Entity
+@Table(name = "product_table")
+public class Product {
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
+	private String name;
+	private BigDecimal price;
+	public Product(String name, Double price) {
+		super();
+		this.name = name;
+		this.price = price;
+	}
+		
+}
+
+@Repository
+public interface ProductDao extends JpaRepository<Product, Integer>{
+	public Product findByName(String name);
+}
+
+Step 3: service layer
+_______________________
+
+public interface ProductService {
+	public List<Product> findAll();
+	public Product getById(int id);
+	public Product addProduct(Product product);
+	public Product updateProduct(int id, Product product);
+	public Product deleteProduct(int id);
+	
+}
+
+
+
+public class ProductNotFoundException extends RuntimeException{
+	public ProductNotFoundException(String message) {
+		super(message);
+	}
+}
+
+
+
+
+@Service
+@Transactional
+public class ProductServiceImpl implements ProductService {
+
+	private ProductDao productDao;
+
+	@Autowired
+	public ProductServiceImpl(ProductDao productDao) {
+		this.productDao = productDao;
+	}
+
+	@Override
+	public List<Product> findAll() {
+		return productDao.findAll();
+	}
+
+	@Override
+	public Product getById(int id) {
+		return productDao.findById(id)
+				.orElseThrow(() -> new ProductNotFoundException("product with id" + id + " is not found"));
+	}
+
+	@Override
+	public Product addProduct(Product product) {
+		productDao.save(product);
+		return product;
+	}
+
+	@Override
+	public Product updateProduct(int id, Product product) {
+		Product productToUpdate= getById(id);
+		productToUpdate.setPrice(product.getPrice());
+		productDao.save(productToUpdate);
+		return productToUpdate;
+	}
+
+	@Override
+	public Product deleteProduct(int id) {
+		Product productToDelete= getById(id);
+		productDao.delete(productToDelete);
+		return productToDelete;
+	}
+
+}
+
+
+Step 4: rest controller
+_______________________
+@RestController
+public class ProductController {
+
+	private ProductService productService;
+
+	@Autowired
+	public ProductController(ProductService productService) {
+		this.productService = productService;
+	}
+	@GetMapping(path = "products")
+	public List<Product>findAll(){
+		return productService.findAll();
+	}
+	
+	@GetMapping(path = "products/{id}")
+	public Product findById(@PathVariable(name = "id") int id){
+		return productService.getById(id);
+	}
+	
+	@PostMapping(path = "products")
+	public Product addProduct( @RequestBody Product product){
+		return productService.addProduct(product);
+	}
+	
+	@DeleteMapping(path = "products/{id}")
+	public Product deleteProduct(@PathVariable(name = "id") int id){
+		return productService.deleteProduct(id);
+	}
+	
+	@PutMapping(path = "products/{id}")
+	public Product updateProduct(@PathVariable(name = "id") int id, @RequestBody Product product){
+		return productService.updateProduct(id, product);
+	}
+}
+
+
+
+Step 5: rest controller: ResponseEntity
+_______________________________________
+
+@RestController
+public class ProductController {
+
+	private ProductService productService;
+
+	@Autowired
+	public ProductController(ProductService productService) {
+		this.productService = productService;
+	}
+	
+	@GetMapping(path = "products")
+	public ResponseEntity<List<Product>> findAll(){
+		return ResponseEntity.status(HttpStatus.OK).body(productService.findAll());
+	}
+	
+	@GetMapping(path = "products/{id}")
+	public ResponseEntity<Product> findById(@PathVariable(name = "id") int id){
+		return ResponseEntity.ok(productService.getById(id));
+	}
+	
+	@PostMapping(path = "products")
+	public ResponseEntity<Product> addProduct( @RequestBody Product product){
+		return ResponseEntity.status(HttpStatus.CREATED).body(productService.addProduct(product));
+	}
+	
+	@DeleteMapping(path = "products/{id}")
+	public ResponseEntity<Void> deleteProduct(@PathVariable(name = "id") int id){
+		 productService.deleteProduct(id);
+		 return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+	}
+	
+	@PutMapping(path = "products/{id}")
+	public ResponseEntity<Product> updateProduct(@PathVariable(name = "id") int id, @RequestBody Product product){
+		return ResponseEntity.status(HttpStatus.CREATED).body(productService.updateProduct(id, product));
+	}
+}
+
+
+
+
+Step 6: rest controller exception handling
+_______________________________________
+@ResponseStatus(code =HS.NotFound)
+ProductNotFoundException extends RuntimeExcetion{
+}
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ErrorDetails {
+	private String message;
+	private String details;
+	
+	private String name;
+	private Date date;
+	
+}
+
+
+
+@RestControllerAdvice
+public class ExHandler {
+
+	@ExceptionHandler(ProductNotFoundException.class)
+	public ResponseEntity<ErrorDetails> handle404(Exception ex, WebRequest req){
+		ErrorDetails details=new ErrorDetails();
+		details.setDate(new Date());
+		details.setDetails(req.getDescription(true));
+		details.setName("rgupta.mtech@gmail.com");
+		details.setDetails(ex.toString());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(details);
+	}
+	
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ErrorDetails> handle500(Exception ex, WebRequest req){
+		ErrorDetails details=new ErrorDetails();
+		details.setDate(new Date());
+		details.setDetails(req.getDescription(true));
+		details.setName("rgupta.mtech@gmail.com");
+		details.setDetails(ex.toString());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(details);
+	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ErrorDetails> handle500(Exception ex, WebRequest req){
+		ErrorDetails details=new ErrorDetails();
+		details.setDate(new Date());
+		details.setDetails(req.getDescription(true));
+		details.setName("rgupta.mtech@gmail.com");
+		details.setDetails(ex.toString());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(details);
+	}
+
+}
+
+
+Step 7: JSR 303 validateion api , exception handling
+__________________________________________________
+
+1. add validation api
+
+2. apply @valid in post and update method 
+
+3. 
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProductDto {
+
+	private int id;
+	
+	@NotNull(message = "{product.name.absent}")
+	@Pattern(regexp = "[A-Za-z]+( [A-Za-z]+)*", message = "{product.name.invalid}")
+	private String name;
+
+	@NotNull(message = "{product.price.absent}")
+	@Range(min = 100, max = 100000, message = "{product.price.invalid}")
+	private BigDecimal price;
+
+}
+
+
+4. create exception handler
+
+       @ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public Map<String, String> handleInvalidArgument(MethodArgumentNotValidException ex) {
+
+		Map<String, String> errorMap = new HashMap<>();
+		ex.getBindingResult().getFieldErrors().forEach(error -> {
+			errorMap.put(error.getField(), error.getDefaultMessage());
+		});
+		return errorMap;
+	}
+
+
+ValidationMessages.properties
+-----------------------------
+
+product.name.absent=Please provide product name
+product.name.invalid=product Name should contain only alphabets and space
+
+product.price.absent=Please provide product price 
+account.price.invalid=Please provide correct price bw 100 to 100000
+
+
+	Other validation example:
+	-------------------------
+
+	@Email(message = "{account.email.invalid}")
+	@NotNull(message = "{account.email.absent}")
+	private String email;
+	
+	@NotNull(message = "{account.phone.absent}")
+	@Pattern(regexp = "[789][0-9]{9}", message = "{account.phone.invalid}")
+	private String phone;
+
+
+
+	private String category;
+	
+		EL BOOKS FMCG
+		
+Implementation of custom valiation logic:
+-------------------------------------------
+
+
+setp 1: create ProductTypeValidator need to be used by custom annotation
+
+public class ProductTypeValidator implements ConstraintValidator<ValidateProductType, String> {
+    @Override
+    public boolean isValid(String productType, ConstraintValidatorContext constraintValidatorContext) {
+        List<String> productTypes = Arrays.asList("Electronic", "Books");
+        return productTypes.contains(productType);
+    }
+}
+
+
+setp 2: create Custom annotation
+
+@Target({ElementType.FIELD,ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Constraint(validatedBy = EmployeeTypeValidator.class)
+public @interface ValidateProductType {
+
+    public String message() default "Invalid productType: It should be either Electronic Or Books";
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
+}
+
+
+
+//custom annotation
+    @ValidateProductType
+    private String productType; //Electronic or Books
+    
+
+    
+
+Supporting both xml and json:
+	_______________________________
+
+	Step 1: put parser for xml
+
+	     <dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+	     </dependency>
+
+	Step 2:
+	@GetMapping(path = "products", produces = {MediaType.APPLICATION_JSON_VALUE, 
+			MediaType.APPLICATION_XML_VALUE})
+
+
+
+
+
+
+
+
+
+
+Spring boot loging customization:
+_____________________________________
+
+                 <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<!-- hey maven removed defualt log4j from from my project -->
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
+		</dependency>
+
+
+
+
+spring boot logging:
+-------------------
+ 	     
+Disable logging :
+---------------
+logging.level.root=OFF
+logging.level.org.springframework.boot=OFF
+spring.main.banner-mode=OFF   
+
+	     
+     
+Customizing logging :
+---------------	     
+logging.level.org.springframework.web: DEBUG
+logging.level.org.hibernate: ERROR
+
+logging.level.com.productapp=info
+
+
+logging.level.org.springframework.web: DEBUG
+logging.level.org.hibernate: ERROR
+
+
+# Logging pattern for the console
+logging.pattern.console= "%d{yyyy-MM-dd } [%thread] %-5level %logger{36} - %msg%n"
+#logging pattern for file
+logging.pattern.file= "%d{yyyy-MM-dd } [%thread] %-5level %logger{36} - %msg%n"
+
+logging.file.name=/home/raj/Desktop/logs/server.log
+	     
+	     
+ 
+	     
+	     
+
+   
+
+
+
+richardson maturity model
+_________________________
+
+Step 8: hateoas: Hypermedia as the Engine of Application State (HATEOAS)
+__________________
+
+ 1: put hateoas dependencies
+
+ 2: enable static improt:
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+
+ 3: change POJO class:
+
+public class Product extends RepresentationModel<Product> {
+} 
+
+
+
+@GetMapping(path = "productsV2/{id}")
+	public EntityModel<Product>  findByIdLink(@PathVariable(name = "id") int id){
+		Link link=linkTo(methodOn(ProductController.class).findByIdLink(id)).withSelfRel();
+		Product product=productService.getById(id);
+		product.add(link);
+		return EntityModel.of(product);
+}
+
+@GetMapping(path = "productsV2")
+	public CollectionModel<Product> findAllV2(){
+		List<Product> products=productService.findAll();
+		for(Product product: products) {
+			Link link=linkTo(methodOn(ProductController.class).findByIdLink(product.getId())).withSelfRel();
+			product.add(link);
+		}
+		return CollectionModel.of(products);
+}
+
+
+
+9. Using OpenAPI 3.0
+_____________________
+
+=> Documenting a Spring REST API Using OpenAPI 3.0
+=>Swagger is almost equivalent to SOAP formate, used for documentation of REST api
+
+		Step 1:
+
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
+			<version>1.6.4</version>
+		</dependency>
+
+	Step 2:
+
+	http://localhost:8090/bookapp/v3/api-docs
+	
+	http://localhost:8090/bookapp/swagger-ui/index.html
+
+	http://localhost:8090/bookapp/v3/api-docs.yaml
+
+	Step 3:
+	Customization location
+	springdoc.swagger-ui.path=/swagger-ui-bookapp.html
+
+	@OpenAPIDefinition(info = @Info(title = "bookapp API", version = "2.0" , description = "YMSLI bookapp API"))
+	public class BookappApplication implements CommandLineRunner {
+	}
+
+
+	
+10. caching
+_____________
+
+
+step 1: configuration of cache
+
+@Configuration
+@EnableCaching
+public class CachingConfig {
+	@Bean
+	public CacheManager cacheManager(){
+		ConcurrentMapCacheManager cacheManager=new ConcurrentMapCacheManager("products");
+		return cacheManager;
+		
+	}
+}
+
+
+Step 2: applying cache annotations on service layer
+
+@Slf4j
+@Service
+@Transactional
+public class ProductServiceImpl implements ProductService {
+
+	
+	@Cacheable(value="products")
+	@Override
+	public List<Product> findAll() {
+		//
+	}
+
+	@Cacheable(value="products", key = "#id")
+	@Override
+	public Product getById(int id) {
+		//
+	}
+
+	@CachePut(value="products", key="#result.id")
+	@Override
+	public Product addProduct(Product product) {
+		//
+	}
+
+	@CachePut(value="products", key="#result.id")
+	@Override
+	public Product updateProduct(int id, Product product) {
+		//
+	}
+
+	@CacheEvict(value="products", key="#id")
+	@Override
+	public Product deleteProduct(int id) {
+		//
+	}
+
+	@CacheEvict(value="products", allEntries=true)
+	@Override
+	public void evictCache() {
+		log.info("cache is cleared...");
+	}
+
+}
+
+
+
+
+Step 11: schedule processes
+____________________________
+
+	Note:
+	The simple rules that we need to follow to annotate a method with @Scheduled are:
+
+			a method should have the void return type
+			a method should not accept any parameters
+
+	step 1: put @EnableScheduling on bootstrap class
+
+	step 2: create an component with @Scheduled annotation
+
+				
+		@Service
+		public class ScheduledJob {
+			private Logger logger = LoggerFactory.getLogger(ScheduledJob.class);
+		
+			@Autowired
+			private ProductService service;
+		
+			@Scheduled(cron = "0,30 * * * * *")
+			public void cronJob() {
+				logger.info("> cronJob");
+		
+				List<Product> products = service.findAll();
+				logger.info("There are {} products in the data store.", products.size());
+		
+				logger.info("< cronJob");
+			}
+		
+			// after application startup delay of 5 sec, schedule to run each after 15
+			
+			@Scheduled(initialDelay = 5000, fixedRate = 15000)
+			public void fixedRateJob() {
+				logger.info("> fixedRateJob");
+		
+				// Add scheduled logic here
+		
+				List<Product> products = service.findAll();
+				
+				logger.info("There are {} books in the data store.", products.size());
+		
+				logger.info("< fixedRateJob");
+			}
+		
+		}
+
+
+ref:
+https://www.baeldung.com/spring-scheduled-tasks
+https://www.tutorialspoint.com/unix_commands/crontab.htm
+
+Spring boot Actuator:
+-------------------------
+
+server.port=8080
+spring.devtools.restart.enabled=true
+#management.endpoints.web.exposure.exclude=*
+management.endpoints.web.exposure.include=health, custom-endpoint
+management.endpoint.health.show-details=always
+management.health.disk.enabled=true
+management.health.livenessstate.enabled=true
+management.health.readinessstate.enabled=true
+management.server.port=9090
+
+
+#/actuator/info endpoint will show the information given here, keys
+# that are started with info
+info.app.encoding=UTF-8
+info.app.java.source=11
+info.app.java.target=11
+info.app.name=spring booot actuator
+
+
+Custom end points
+
+@Configuration
+@Endpoint(id = "custom-endpoint")
+public class CustomEndpoints {
+    @ReadOperation
+    public String getCustomData(){
+        return "This is custom Data";
+    }
+}
+
+
+
+
+
+Step 12: web application with boot
+____________________________
+
+1. We need to put dependency:
+
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-jasper</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>jstl</artifactId>
+		</dependency>
+
+
+2. We need to configure view resolver
+
+spring.mvc.view.prefix:/WEB-INF/views/
+spring.mvc.view.suffix:.jsp
+
+
+3. define controller 
+
+@Controller
+public class ProductController {
+	
+	private ProductService productService;
+
+	@Autowired
+	public ProductController(ProductService productService) {
+		this.productService = productService;
+	}
+	
+	@GetMapping("products")
+	public ModelAndView allProducts(ModelAndView mv) {
+		mv.setViewName("products");
+		mv.addObject("products", productService.findAll());
+		
+		return mv;
+	}
+}
+
+put jsp in /bootapp/src/main/webapp/WEB-INF/views
+
+
+4. define jsp view 
+
+<table>
+	<thead>
+		<tr>
+			<th>product id</th>
+			<th>product name</th>
+			<th>product price</th>
+		</tr>
+	</thead>
+	<tbody>
+		<c:forEach items="${products}" var="product">
+			<tr>
+				<td>${product.id }</td>
+				<td>${product.name }</td>
+				<td>${product.price }</td>
+			</tr>
+		</c:forEach>
+	</tbody>
+</table>
+
+
+
+Step 11: deployment spring boot as war file to tomcat
+___________________________________________________
+
+
+
+Step 12: Spring boot mongodb integration:
+______________________________________________
+https://roytuts.com/installing-zip-version-of-mongodb-in-windows/
+
+RDBMS 	MongoDB
+______________
+
+Table 	<--->	Collection
+Column 	<--->	Key
+Value 	<--->	Value
+Records/Rows<--->Document/Object
+
+
+Creating collections, document, storing data etc:
+__________________________________________
+
+show dbs 		// List all databases
+use rajdb 		//Switches to inventory
+show collections  	//List all tables in the current selected database
+
+Creating collections, document, storing data etc
+__________________________________________
+
+	use rajdb;	// create as well switch to rajdb
+
+
+
+choose dependencies: web, devtools, mongo
+step 1: Dao layer
+____________________
+
+@Document(collection = "products")
+public class Product {
+    @Id
+    private String id;
+    private String name;
+    private BigDecimal price;
+    private String category;
+    
+}
+
+
+@Repository
+public interface ProductRepo extends MongoRepository<Product, Integer> {
+    public List<Product> findByName(String name);
+}
+
+
+step 5: application.properties
+___________________
+server.servlet.context-path=/empapp
+server.port=8080
+spring.data.mongodb.host=localhost
+spring.data.mongodb.port=27017
+spring.data.mongodb.database=mongodb
+spring.data.mongodb.repositories.enabled=true
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+RestTemplate tutorial:
+______________________
+	=> RestTemplate is used to communication bw different spring boot application
+	=> key for microservice project development
+
+	=> Microservices communication is possible using RestTemplate
+	=> RestTemplate various method to intract bw diff microservices
+		=> methods:
+			xxxForObject()-getForObject(), postForObject(), getForEntity(), postForEntity()
+			xxxForEntity()
+			exchange()-calling Http POST/PUT/DELETE endpoint 
+
+	=> How to add base URL in RestTemplate
+	=> How to Add timout in RestTemplate
+	=> How to add interceptor in RestTemplate for centralized logging of request and response
+
+
+Example:
+________
+Refer product application
+
+
+getForObject method:
+==================
+
+getting an object :
+____________________
+Product product=restTemplate.getForObject("http://localhost:8082/productapp/products/2", Product.class);
+
+getting an Product by id :
+_________________________
+
+String productById="http://localhost:8082/productapp/products/{id}";
+Map<String, String> prop=new HashMap<>();
+prop.put("id", id);
+Product product=restTemplate.getForObject(productById,Product.class, prop);
+	
+
+getting an object as string:
+____________________________
+String productString=restTemplate.getForObject("http://localhost:8082/productapp/products/2", String.class);
+
+
+getting all products:
+________________
+List products = restTemplate.getForObject("http://localhost:8082/productapp/products", List.class);
+
+
+
+adding new product:
+_______________________
+Product productAdded=restTemplate.postForObject("http://localhost:8082/productapp/products",product, Product.class);
+
+
+
+
+xxxForEntity()-calling Http POST/PUT/DELETE endpoint 
+_____________________________________
+
+
+getList:
+_________
+ResponseEntity<List> productEntity = 
+				restTemplate
+				.getForEntity("http://localhost:8082/productapp/products",List.class);
+	
+		System.out.println(productEntity.getStatusCodeValue());
+		System.out.println(productEntity.getHeaders());
+		return productEntity.getBody();
+
+
+ getSingleObject
+_________________
+	Map<String, String> prop=new HashMap<>();
+		
+		prop.put("id", id);
+		ResponseEntity<Product> productEntity = restTemplate
+				.getForEntity("http://localhost:8082/productapp/products/{id}",
+				Product.class, prop);
+		return productEntity.getBody();
+
+
+ postForEntity:
+ ______________
+	ResponseEntity<Product> productEntity = restTemplate
+			.postForEntity("http://localhost:8082/productapp/products",
+				product, Product.class);
+		return productEntity.getBody();
+
+  
+deleteProduct: delete
+_________
+
+  	Map<String, String> uriVariables = new HashMap<>();
+	uriVariables.put("id", id);
+
+	restTemplate.delete("http://localhost:8082/productapp/products/{id}", uriVariables);
+
+updateProduct
+___________
+
+  	Map<String, String> uriVariables = new HashMap<>();
+	uriVariables.put("id", id);
+
+        restTemplate.put("http://localhost:8082/productapp/products/{id}", product, uriVariables);
+       	System.out.println("updated....");
+
+Feign
+___________
+=> The Feign is a declarative web service (HTTP client) developed by Netflix. 
+Its aim is to simplify the HTTP API clients. It is a Java to HTTP client binder. 
+If you want to use Feign, create an interface, and annotate it. 
+
+
+=> It is a library for creating REST API clients. It makes web service clients easier. 
+The developers can use declarative annotations to call the REST
+ services instead of writing representative boilerplate code.
+
+=> Spring Cloud OpenFeign provides OpenFeign integrations for Spring Boot 
+apps through auto-configuration and binding to the Spring Environment. 
+Without Feign, in Spring Boot application, we use RestTemplate to call the User service.
+ To use the Feign, we need to add spring-cloud-starter-openfeign dependency in the pom.xml file.
+
+
+Step 1:
+put openfeign dependency
+
+step 2: Apply @EnableFeignClients to bootstrap class
+
+@EnableFeignClients("com.product.model.service")
+@SpringBootApplication
+public class ProductApplication  {
+
+step 3: create ProductServiceProxy
+
+@FeignClient(name="product-service", url="http://localhost:8082/productapp")  
+public interface ProductServiceProxy {
+	@GetMapping(path = "products")
+	public ResponseEntity<List<Product>> findAll();
+	
+	@GetMapping(path = "products/{id}")
+	public ResponseEntity<Product> findById(@PathVariable(name = "id") int id);
+	
+	@PostMapping(path = "products")
+	public ResponseEntity<Product> addProduct( @RequestBody Product product);
+	
+	@DeleteMapping(path = "products/{id}")
+	public ResponseEntity<Void> deleteProduct(@PathVariable(name = "id") int id);
+	
+	@PutMapping(path = "products/{id}")
+	public ResponseEntity<Product> updateProduct
+	(@PathVariable(name = "id") int id, @RequestBody Product product);
+	
+}
+
+
+step 4: use ProductServiceProxy
+
+@RestController
+public class ProductClientController {
+
+	@Autowired
+	private ProductServiceProxy productServiceProxy;
+	
+	@GetMapping(path = "products")
+	public ResponseEntity<List<Product>> getAll() {
+		return productServiceProxy.findAll();
+	}
+
+	@GetMapping(path = "products/{id}")
+	public ResponseEntity<Product> getById(@PathVariable(name = "id") int id) {
+		return productServiceProxy.findById(id);
+	}
+
+	@PostMapping(path = "products")
+	public ResponseEntity<Product> addProduct(@RequestBody Product product) {
+		return productServiceProxy.addProduct(product);
+	}
+
+	@DeleteMapping(path = "products/{id}")
+	public ResponseEntity<Void> deleteProduct(@PathVariable(name = "id") int id) {
+		return productServiceProxy.deleteProduct(id);
+	}
+
+
+}
+
+
+
+step 5: in case of eureka server: no need to provide url :)
+
+@FeignClient(name="product-service")
+
+
+
+
+Spring security:
+--------------------
+step 1: put spring sec dependency
+
+step 2: customization of speing security
+
+
+@Component
+@EnableWebSecurity//(debug = true)
+public class SecConfig extends WebSecurityConfigurerAdapter{
+	
+	//used to do authentication 401
+	@Override
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		//auth.userDetailsService(userDetails);
+		
+		auth.inMemoryAuthentication()
+		.withUser("raj").password("raj123").roles("ADMIN")
+		.and()
+		.withUser("ekta").password("ekta123").roles("MGR");
+	}
+	@Bean
+	public PasswordEncoder encoder() {
+		return NoOpPasswordEncoder.getInstance();
+	}
+
+	@Override
+	public void configure(WebSecurity web) throws Exception {
+		web.ignoring()
+		.antMatchers("/h2/**");
+	}
+
+	//used to do autherization 403
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.csrf().disable()
+		.authorizeRequests()
+		.antMatchers("/products/**").hasAnyRole("ADMIN","MGR")
+		.antMatchers("/home/**").permitAll()
+		.and()
+		.httpBasic()
+		.and()
+		.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+		
+	}
+
+	
+	
+}
+
+
+step 3: spring security jpa
+
+@Data
+@NoArgsConstructor
+@ToString
+@Entity
+@Table(name = "user_table")
+public class UserEntity {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+	
+	@Column(unique = true, nullable = false)
+	private String username;
+	private String password;
+	
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name="user_roles")
+	private List<String> roles= new ArrayList<>();
+
+	public UserEntity(String username, String password, List<String> roles) {
+		this.username = username;
+		this.password = password;
+		this.roles = roles;
+	}
+	
+}
+
+
+@Repository
+public interface UserEntityRepo extends JpaRepository<UserEntity, Integer>{
+	public UserEntity findByUsername(String username);
+}
+
+
+public interface UserService {
+	public UserEntity findByUsername(String username);
+	public void addUserEntity(UserEntity userEntity);
+}
+
+
+
+@Service
+@Transactional
+public class UserServiceImpl implements UserService {
+
+	@Autowired
+	private UserEntityRepo entityRepo;
+	
+	@Override
+	public UserEntity findByUsername(String username) {
+		return entityRepo.findByUsername(username);
+	}
+
+	@Override
+	public void addUserEntity(UserEntity userEntity) {
+		entityRepo.save(userEntity);
+	}
+
+}
+
+
+
+@SpringBootApplication
+public class ProductappApplication implements CommandLineRunner {
+
+	@Autowired
+	private ProductService productService;
+	
+	@Autowired
+	private UserService userService;
+	
+	
+	public static void main(String[] args) {
+		SpringApplication.run(ProductappApplication.class, args);
+	}
+
+	@Override
+	public void run(String... args) throws Exception {
+		productService.addProduct(new Product("laptop", new BigDecimal(100000),"raj"));
+		productService.addProduct(new Product("laptop mouse", new BigDecimal(1000),"ekta"));
+		
+		userService.addUserEntity(new UserEntity("raj", "raj123",Arrays.asList("ROLE_ADMIN","ROLE_MGR")));
+		userService.addUserEntity(new UserEntity("ekta", "ekta123",Arrays.asList("ROLE_MGR")) );
+		
+		System.out.println("------------------------------------------------");
+	}
+
+}
+
+
+@Component
+public class SecUserDetailService implements UserDetailsService {
+
+	@Autowired
+	private UserService userService;
+	
+	@Override
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		UserEntity userEntity= userService.findByUsername(username);
+		if(userEntity==null)
+			throw new UsernameNotFoundException("user not found");
+		//convert UserEntity to the user that can be understand by spring security
+		
+		
+		return new SecUser(userEntity);
+	}
+
+}
+
+
+
+public class SecUser implements UserDetails{
+
+	private static final long serialVersionUID = 1L;
+	@Autowired
+	private UserEntity userEntity;
+	
+	
+	
+	public SecUser(UserEntity userEntity) {
+		this.userEntity = userEntity;
+	}
+
+	public SecUser() {}
+
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		List<String> roles= userEntity.getRoles();
+		String rolesNames[]=roles.toArray(new String[roles.size()]);
+		return AuthorityUtils.createAuthorityList(rolesNames);
+	}
+
+	@Override
+	public String getPassword() {
+		return userEntity.getPassword();
+	}
+
+	@Override
+	public String getUsername() {
+		return userEntity.getUsername();
+	}
+
+	@Override
+	public boolean isAccountNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isAccountNonLocked() {
+		return true;
+	}
+
+	@Override
+	public boolean isCredentialsNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return true;
+	}
+
+}
+
+
+
+
+@Component
+@EnableWebSecurity//(debug = true)
+public class SecConfig extends WebSecurityConfigurerAdapter{
+	
+	@Autowired
+	private UserDetailsService detailsService;
+	
+	@Override
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		auth.userDetailsService(detailsService);
+	}
+	//...........
+	
+}
+
+
+
+we must use password encoder:
+-------------------------------
+
+@Component
+@EnableWebSecurity//(debug = true)
+public class SecConfig extends WebSecurityConfigurerAdapter{
+	
+	//----------
+	
+	@Bean
+	public PasswordEncoder encoder() {
+		return new BCryptPasswordEncoder();
+	}
+	//...........
+	
+}
+
+
+@Service
+@Transactional
+public class UserServiceImpl implements UserService {
+
+	@Autowired
+	private PasswordEncoder encoder;
+	
+	//.................
+
+	@Override
+	public void addUserEntity(UserEntity userEntity) {
+		userEntity.setPassword(encoder.encode(userEntity.getPassword()));
+		entityRepo.save(userEntity);
+	}
+	
+	//..............
+
+}
+
+	
+
+
+method level security:
+----------------------
+
+spring sec?
+-----------
+url pattern
+
+method level sec (AOP)
+object level sec
+
+
+step 1:
+
+@EnableGlobalMethodSecurity(prePostEnabled = true, jsr250Enabled = true, securedEnabled = true)
+@SpringBootApplication
+
+
+step 2:
+------------
+
+public class SecConfig extends WebSecurityConfigurerAdapter{
+	//---------
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.csrf().disable()
+		.authorizeRequests()
+		.anyRequest().authenticated()
+		.and()
+		.httpBasic()
+		.and()
+		.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+	}
+	//---------
+}
+
+
+step 3:
+---------
+
+
+public interface ProductService {
+	@PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_MGR')")
+	public List<Product> findAll();
+	
+	@PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_MGR')")
+	public Product getById(int id);
+	
+	//@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	public Product addProduct(Product product);
+	
+	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	public Product updateProduct(int id, Product product);
+	
+	@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+	//@PostAuthorize("returnObject.vendorName==authentication.name")
+	//@Secured({"ROLE_ADMIN","ROLE_MGR"})
+	public Product deleteProduct(int id);
+	
+}
+
+step 4: write handler for it
+--------------------------
+
+ @ExceptionHandler(AccessDeniedException.class)
+    public final ResponseEntity<ErrorDetails> handleAccessDeniedException(AccessDeniedException ex) {
+    	ErrorDetails details = new ErrorDetails();
+		details.setDate(LocalDateTime.now());
+		details.setName("rgupta.mtech@gmail.com");
+		details.setDetails(ex.getMessage());
+        return new ResponseEntity<>(details, HttpStatus.FORBIDDEN);
+   }
+    
+
+
+
+@Component
+public class AppAuthenticationEntryPoint implements AuthenticationEntryPoint {
+    @Override
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+    }
+
+}
+
+
+@Configuration
+public class CorsConfiguration {
+
+    private static final String GET = "GET";
+    private static final String POST = "POST";
+    private static final String PUT = "PUT";
+    private static final String DELETE = "DELETE";
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedMethods(GET, POST, PUT, DELETE)
+                        .allowedHeaders("*")
+                        .allowedOriginPatterns("*")
+                        .allowCredentials(true);
+            }
+        };
+    }
+}
+
+
+
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.cors();
+		http.csrf().disable().authorizeRequests()
+		.anyRequest().authenticated()
+		.and()
+		.exceptionHandling().authenticationEntryPoint(authenticationEntryPoint)
+		.and().sessionManagement()
+		.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+	}
+
+Note : to get currently loggedin user in controller layer user
+@authenticationprincipal
+
+
+
+
+Spring security JWT:
+----------------------
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt</artifactId>
+			<version>0.9.1</version>
+		</dependency>
+		
+Step 1: JwtUtil for util method to create jwt token and to validate
+
+
+@Component
+public class JwtUtil {
+
+    private static final String SECRET_KEY = "learn_programming_yourself";
+
+    private static final int TOKEN_VALIDITY = 3600 * 5;
+
+    public String getUsernameFromToken(String token) {
+        return getClaimFromToken(token, Claims::getSubject);
+    }
+
+    public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = getAllClaimsFromToken(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims getAllClaimsFromToken(String token) {
+        return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
+    }
+
+    public Boolean validateToken(String token, UserDetails userDetails) {
+        final String username = getUsernameFromToken(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+    private Boolean isTokenExpired(String token) {
+        final Date expiration = getExpirationDateFromToken(token);
+        return expiration.before(new Date());
+    }
+
+    public Date getExpirationDateFromToken(String token) {
+        return getClaimFromToken(token, Claims::getExpiration);
+    }
+
+    public String generateToken(UserDetails userDetails) {
+
+        Map<String, Object> claims = new HashMap<>();
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + TOKEN_VALIDITY * 1000))
+                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
+                .compact();
+    }
+}
+
+
+
+step 2: dto to do JwtRequest and JwtResponse
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class JwtRequest {
+	private String userName;
+	private String userPassword;
+}
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class JwtResponse {
+	private UserEntity user;
+	private String jwtToken;
+
+}
+
+
+
+@Service
+public class DetailService implements UserDetailsService {
+
+	@Autowired
+	private JwtUtil jwtUtil;
+
+	@Autowired
+	private UserService userService;
+
+	@Autowired
+	private AuthenticationManager authenticationManager;
+
+	public JwtResponse createJwtToken(JwtRequest jwtRequest) throws Exception {
+		String userName = jwtRequest.getUserName();
+		String userPassword = jwtRequest.getUserPassword();
+		authenticate(userName, userPassword);
+
+		UserDetails userDetails = loadUserByUsername(userName);
+		String newGeneratedToken = jwtUtil.generateToken(userDetails);
+
+		UserEntity userEntity=userService.findByUsername(userName);
+		return new JwtResponse(userEntity, newGeneratedToken);
+	}
+
+	private void authenticate(String userName, String userPassword) throws Exception {
+		try {
+			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userName, userPassword));
+		} catch (DisabledException e) {
+			throw new Exception("USER_DISABLED", e);
+		} catch (BadCredentialsException e) {
+			throw new Exception("INVALID_CREDENTIALS", e);
+		}
+	}
+
+	@Override
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
+		UserEntity userEntity = userService.findByUsername(username);
+		if (userEntity == null) {
+			throw new UsernameNotFoundException("user is not found");
+		}
+
+		SecUser secUser = new SecUser(userEntity);
+
+		return secUser;
+	}
+
+}
+
+
+step 3: creating JwtRequestFilter filter
+
+
+@Component
+public class JwtRequestFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserDetailsService jwtService;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+        final String requestTokenHeader = request.getHeader("Authorization");
+
+        String username = null;
+        String jwtToken = null;
+
+        if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
+            jwtToken = requestTokenHeader.substring(7);
+            try {
+                username = jwtUtil.getUsernameFromToken(jwtToken);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Unable to get JWT Token");
+            } catch (ExpiredJwtException e) {
+                System.out.println("JWT Token has expired");
+            }
+        } else {
+            System.out.println("JWT token does not start with Bearer");
+        }
+
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+            UserDetails userDetails = jwtService.loadUserByUsername(username);
+
+            if (jwtUtil.validateToken(jwtToken, userDetails)) {
+
+                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+            }
+        }
+        filterChain.doFilter(request, response);
+
+    }
+
+}
+
+
+
+@RestController
+@CrossOrigin
+public class JwtController {
+
+    @Autowired
+    private DetailService jwtService;
+
+    @PostMapping({"/authenticate"})
+    public JwtResponse createJwtToken(@RequestBody JwtRequest jwtRequest) throws Exception {
+        return jwtService.createJwtToken(jwtRequest);
+    }
+}
+
+
+
+
+
+
+@Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class SecConfig extends WebSecurityConfigurerAdapter {
+
+	@Autowired
+	private AuthenticationEntryPoint authenticationEntryPoint;
+
+	@Autowired
+	private UserDetailsService userDetailsService;
+
+	@Autowired
+	private JwtRequestFilter jwtRequestFilter;
+
+	@Override
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		auth.userDetailsService(userDetailsService);
+	}
+//	@Autowired
+//	public void configureGlobal(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
+//		authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(encode());
+//	}
+
+	@Bean
+	@Override
+	public AuthenticationManager authenticationManagerBean() throws Exception {
+		return super.authenticationManagerBean();
+	}
+
+	@Bean
+	public PasswordEncoder encode() {
+		return new BCryptPasswordEncoder();
+	}
+
+	// 403-> i know who are u ...let me decide what u can access
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.cors();
+		http.csrf().disable().authorizeRequests()
+		.antMatchers("/authenticate").permitAll()
+		.antMatchers(HttpHeaders.ALLOW).permitAll()
+		.anyRequest().authenticated()
+		.and()
+		.exceptionHandling().authenticationEntryPoint(authenticationEntryPoint)
+		.and().sessionManagement()
+		.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+		http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+	}
+}
+
+
+
+how to invoke
+
+do post operation:
+
+http://localhost:8090/productapp/authenticate
+
+send 
+{
+    "userName": "raj",
+    "userPassword": "raj123"
+}
+
+{
+    "user": {
+        "id": 1,
+        "username": "raj",
+        "password": "$2a$10$z3GHNjg/jPXgNsftjLvG8ukMcj5GW4nsVyjpXFUCqTERks8XuA.B2",
+        "roles": [
+            "ROLE_ADMIN",
+            "ROLE_MGR"
+        ]
+    },
+    "jwtToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJyYWoiLCJleHAiOjE2NjQ1MzMxNjAsImlhdCI6MTY2NDUxNTE2MH0.W1-xayM-BH333c5-SiMZFta_uXA6Grz9ov-8v5TzY7r50WMDzNNG8ka4xOtyylBUxpkuvmTHSQosQ1KPHAcMbw"
+}
+
+
+jwt token:
+eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJyYWoiLCJleHAiOjE2NjQ1MzMxNjAsImlhdCI6MTY2NDUxNTE2MH0.W1-xayM-BH333c5-SiMZFta_uXA6Grz9ov-8v5TzY7r50WMDzNNG8ka4xOtyylBUxpkuvmTHSQosQ1KPHAcMbw
+
+
+Now do get operation
+with header
+Authorization Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJyYWoiLCJleHAiOjE2NjQ0NjcwODEsImlhdCI6MTY2NDQ0OTA4MX0.YcSJswvwngwes-ipXO2jnq1O4Yg60-v5cOB45HaIi9x8UEc7ZnPMN-kc1o86tLefnwLrkvO1AZe0mfWORdBtPg
+
+
+
+
+
+
+
+
+
+
+
+spring boot microservice configuration:Update
+____________________________________
+
+=> unserstanding spring boot configuration
+=> configure features in spring boot
+	value , configprops, Actuator, spring profile, enviornment
+=> spring cloud config server
+=> dynamic configuration
+=> best practices and patterns
+
+=> config features in spring boot
+	value 
+	configprops
+	Actuator
+	spring profiles
+	environment
+=> spring cloud config server
+
+=> Dynamic configuration
+
+spring boot ms configuration goals
+__________________________________
+
+	=> externalized
+		property file should be externalized for loose coupling
+	=> environment specfic
+		test, prod, dev, default
+	=> consistent
+		In microservice we have many spring boot project that must have same configuration parameters, we should manage them centerally (using git) rather than locally
+	=> version histroy
+	    spring clould provide provision for version history using git
+	=> real time management
+
+	=> Dont hard code!
+
+Spring boot profile hello world
+__________________________
+
+application.properties
+____________________
+hello.message=jug delhi
+#spring.profiles.active=dev
+
+
+application-dev.properties
+
+hello.message=jug delhi dev
+
+
+
+application.properties
+
+hello.message-test=jug delhi test
+
+
+
+@RestController
+public class Hello {
+
+	@Value("${hello.message}")
+	private String message;
+	
+	@GetMapping("/")
+	public String sayHello() {
+		return "hello  "+ message;
+	}
+}
+
+
+Running from cmd:
+______________
+java -jar demo.jar --hello.message="hello to spring boot channed message"
+
+
+running on differnt port:
+_________________________
+
+java -jar  demo.jar --server.port=8050
+
+java -jar -Dspring.profiles.active=prod demo.jar 
+
+
+Providing default value with @Value annotation , so that config not fail at run time:
+_______________________________________________
+
+@RestController
+public class Hello {
+
+	@Value("${hello.message: default value}")
+	private String message;
+	
+	@GetMapping("/")
+	public String sayHello() {
+		return "hello  "+ message;
+	}
+}
+
+
+
+
+
+Using actuator:
+______________
+
+Spring Boot Actuator is used to gather metrics using REST endpoints.
+1. What is Actuator
+2. What is the use of Actuator
+3. How to Configure Actuator
+4.  Actuator Metrics
+5. All REST Endpoints exposed by Actuator
+6.  example on all end points like health, beans, cace, configParams, httptrace, mappings, env ...etc
+
+Enable actuator:
+
+management.endpoints.web.exposure.include=*
+
+management.endpoint.health.show-details=always
+
+
+http://localhost:8080/actuator
+
+https://www.javadevjournal.com/spring-boot/spring-boot-actuator/
+https://www.javadevjournal.com/spring-boot/spring-boot-actuator-custom-endpoint/
+
+
+
+
+
+
+spring cloud config server?
+____________________________
+
+https://medium.com/@ijayakantha/microservices-centralized-configuration-with-spring-cloud-f2a1f7b78cc2
+
+Why spring cloud config server?
+_______________________________
+
+	=> in microservice model we have to configure multiple services
+	=> externilization and env specific and real time mgt
+
+
+	M1	---------
+
+	M2	-------		Configuration service		-- git : local
+	
+	M3	-------
+
+
+
+Spring config server + local git configuration:
+______________________________________________
+
+dep:config server, actuator
+step 1: create local git config
+
+application.properties
+spring.datasource.url=jdbc:mysql://localhost:3306/kr_jdbc?useSSL=false
+spring.datasource.username=root
+spring.datasource.password=root
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+commit 
+
+
+step 2: configure config server:
+____________________________
+spring.application.name=configserver
+spring.cloud.config.server.git.uri=/home/raj/Desktop/config
+#spring.cloud.config.server.git.clone-on-start=true
+server.port=8888
+spring.cloud.config.server.git.default-label=master
+
+
+
+
+@EnableConfigServer
+@SpringBootApplication
+public class ConfigServerApplication {
+}
+
+
+step 3: check endpoint
+_________________________
+
+http://localhost:8888/application/default
+
+
+For remote git uri:
+spring.cloud.config.server.git.uri=https://github.com/rgupta00/config_server
+
+
+
+
+Configure config client:
+_______________________
+dependencies: web, config client, actuator, devtools
+
+
+configuration client application.properties
+__________________________________________
+
+management.endpoints.web.exposure.include=*
+spring.config.import=configserver:http://localhost:8888
+#spring.application.name=client-app
+
+@RestController
+public class Hello {
+
+	@Value("${spring.datasource.url: default value}")
+	private String url;
+	
+	@GetMapping("/")
+	public String sayHello() {
+		return url;
+	}
+}
+
+
+
+Refreshing properties at run time:
+________________________________
+
+	=> we need to register refresh hook to the client
+	=> dont forget to enable managment endpoints in client
+
+Step 1:
+_______
+
+@RefreshScope
+@RestController
+public class Hello {
+
+	@Value("${spring.datasource.url: default value}")
+	private String url;
+	
+	@GetMapping("/")
+	public String sayHello() {
+		return url;
+	}
+}
+
+step 2: chnage configuration and commit
+
+step 3: in client application use refresh endpoint
+
+http://localhost:8080/actuator/refresh
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+one to one relationship update:
+_________________________
+
+Now we are going to extends our example:
+-------------------------------
+
+@Entity
+public class Customer {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer customerId;
+	private String emailId;
+	private String name;
+	private LocalDate dateOfBirth;
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "address_id", unique = true)
+	private Address address;
+}
+
+@Entity
+public class Address {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer addressId;
+	private String street;
+	private String city;
+}
+
+Some changes on service layer:
+
+public class CustomerDTO {
+
+	private Integer customerId;
+
+	@Email(message = "{customer.emailid.invalid}")
+	@NotNull(message = "{customer.emailid.absent}")
+	private String emailId;
+
+	@NotNull(message = "{customer.name.absent}")
+	@Pattern(regexp = "[A-Za-z]+( [A-Za-z]+)*", message = "{customer.name.invalid}")
+	private String name;
+
+	@PastOrPresent(message = "{customer.dob.invalid}")
+	private LocalDate dateOfBirth;
+
+	@NotNull
+	@Valid
+	private AddressDTO addressDTO;
+
+}
+
+public class AddressDTO {  
+    private Integer addressId;
+    @NotNull(message = "Please provide street")
+    private String street;
+    @NotNull(message = "Please provide city")
+    private String city;
+}
+
+
+
+@Email(message = "{customer.emailid.invalid}")
+@NotNull(message = "{customer.emailid.absent}")
+private String emailId;
+
+@NotNull(message = "{customer.name.absent}")
+@Pattern(regexp = "[A-Za-z]+( [A-Za-z]+)*", message = "{customer.name.invalid}")
+private String name;
+
+@PastOrPresent(message = "{customer.dob.invalid}")
+private LocalDate dateOfBirth;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+References:
+https://jsonplaceholder.typicode.com/users
+
+https://www.javatpoint.com/using-feign-rest-client-for-service-invocation
+https://stackoverflow.com/questions/46884362/what-are-the-advantages-and-disadvantages-of-using-feign-over-resttemplate
+
+
+
+
+
+
+
+
+
