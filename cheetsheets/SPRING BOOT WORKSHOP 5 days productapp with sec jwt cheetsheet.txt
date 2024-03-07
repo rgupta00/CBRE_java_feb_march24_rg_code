@@ -757,8 +757,9 @@ Supporting both xml and json:
 
 Spring boot loging customization:
 _____________________________________
+https://www.baeldung.com/spring-boot-logback-log4j2
 
-                 <dependency>
+           <dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 			<!-- hey maven removed defualt log4j from from my project -->
@@ -1024,6 +1025,7 @@ management.server.port=9090
 
 #/actuator/info endpoint will show the information given here, keys
 # that are started with info
+management.endpoints.info.enable=true
 info.app.encoding=UTF-8
 info.app.java.source=11
 info.app.java.target=11
