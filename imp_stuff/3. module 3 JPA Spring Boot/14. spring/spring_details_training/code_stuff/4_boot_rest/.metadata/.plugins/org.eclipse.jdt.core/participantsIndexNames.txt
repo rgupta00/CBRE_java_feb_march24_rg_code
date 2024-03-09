@@ -1,3 +1,0 @@
-INDEX VERSION 1.131
-/home/raj/Documents/spring_lab/4_boot_rest/.metadata/.plugins/org.eclipse.jst.jsp.core/jspsearch/589107161.index
-/13_productapp_jsp/src/main/java

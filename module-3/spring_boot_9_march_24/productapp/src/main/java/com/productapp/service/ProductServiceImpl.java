@@ -4,6 +4,9 @@ import com.productapp.entities.Product;
 import com.productapp.exceptions.ProductNotFoundException;
 import com.productapp.repo.ProductRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -23,24 +26,28 @@ public class ProductServiceImpl implements ProductService {
         this.productRepo = productRepo;
     }
 
+    @Cacheable(value="products")
     @Override
     public List<Product> findAll() {
+        System.out.println("------------------------------");
         return productRepo.findAll();
     }
 
+    @Cacheable(value="products", key = "#id")
     @Override
     public Product getById(int id) {
         return productRepo.
                 findById(id)
                 .orElseThrow(()->new ProductNotFoundException("product with id "+id +" is not found"));
     }
-
+    @CachePut(value="products", key="#result.id")
     @Override
     public Product addProduct(Product product) {
         productRepo.save(product);
         return product;
     }
 
+    @CachePut(value="products", key="#result.id")
     @Override
     public Product updateProduct(int id, Product product) {
         Product productToUpdate=getById(id);
@@ -49,6 +56,7 @@ public class ProductServiceImpl implements ProductService {
         return productToUpdate;
     }
 
+    @CacheEvict(value="products", key="#id")
     @Override
     public Product deleteProduct(int id) {
         Product productToDelete=getById(id);
@@ -71,5 +79,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<Product> getAllProductPageSorted(String field, int offset, int pageSize) {
         return productRepo.findAll(PageRequest.of(offset, pageSize).withSort(Sort.by(field)));
+    }
+    @CacheEvict(value="products", allEntries=true)
+    @Override
+    public void invalidateCache() {
+        System.out.println("-----------cache is cleared----------------");
     }
 }

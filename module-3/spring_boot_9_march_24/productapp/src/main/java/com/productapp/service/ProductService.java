@@ -15,5 +15,6 @@ public interface ProductService {
 	public List<Product> getAllProductSorted(String field);
 	public Page<Product> getAllProductPage(int offset, int pageSize);
 	public Page<Product> getAllProductPageSorted(String field,int offset, int pageSize);
-	
+
+	public void invalidateCache();
 }

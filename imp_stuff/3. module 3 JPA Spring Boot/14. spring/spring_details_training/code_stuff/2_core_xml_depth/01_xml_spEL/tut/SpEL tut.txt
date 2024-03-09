@@ -1,8 +1,0 @@
-
-Spring Expression Language (SpEL) concept
-SpEL-Referencing Static Methods and Members
-SpEL-Mathematical Operators
-SpEL - Logical Operators
-SpEL-Regular Expressions
-SpEL-Accessing Collection
-SpEL-Accessing Collection

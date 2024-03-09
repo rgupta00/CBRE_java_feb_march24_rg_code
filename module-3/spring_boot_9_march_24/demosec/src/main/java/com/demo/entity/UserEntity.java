@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "user_table_2")
+@Table(name = "user_table")
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,7 +23,7 @@ public class UserEntity {
     private String password;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name="user_roles_2")
+    @CollectionTable(name="user_roles")
     private List<String> roles= new ArrayList<>();
 
     public UserEntity(String username, String password, List<String> roles) {
