@@ -11,7 +11,8 @@ import javax.persistence.*;
 @Entity
 @Table(name = "parking_table")
 public class Parking {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int parkingId;
     private String parkingLocation;
 

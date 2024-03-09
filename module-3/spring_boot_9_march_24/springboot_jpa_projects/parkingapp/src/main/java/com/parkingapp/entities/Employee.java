@@ -17,8 +17,9 @@ public class Employee  {
     private String empName;
 
     @JoinColumn(name = "pid_fk")
-    @OneToOne(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Parking parking;
+
 }
 
 

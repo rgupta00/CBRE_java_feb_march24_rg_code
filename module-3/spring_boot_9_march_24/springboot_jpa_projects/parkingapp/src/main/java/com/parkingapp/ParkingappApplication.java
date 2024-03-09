@@ -13,11 +13,11 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 public class ParkingappApplication {
 
-	@Autowired
-	private ParkingRepo parkingRepo;
-
-	@Autowired
-	private EmployeeRepo employeeRepo;
+//	@Autowired
+//	private ParkingRepo parkingRepo;
+//
+//	@Autowired
+//	private EmployeeRepo employeeRepo;
 
 	public static void main(String[] args) {
 
@@ -27,18 +27,18 @@ public class ParkingappApplication {
 	@Bean
 	public CommandLineRunner commandLineRunner(){
 		return args -> {
-
-			Employee employe=new Employee();
-			employe.setEmpName("sumit");
-
-			Parking parking=new Parking();
-			parking.setParkingLocation("E31");
-
-			parking.setEmployee(employe);
-			employe.setParking(parking);
-
-			employeeRepo.save(employe);
-		//	parkingRepo.save(parking);
+//
+//			Employee employe=new Employee();
+//			employe.setEmpName("sumit");
+//
+//			Parking parking=new Parking();
+//			parking.setParkingLocation("E31");
+//
+//			parking.setEmployee(employe);
+//			employe.setParking(parking);
+//
+//			employeeRepo.save(employe);
+//		//	parkingRepo.save(parking);
 
 
 		};

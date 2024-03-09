@@ -4,6 +4,9 @@ import com.productapp.entities.Product;
 import com.productapp.exceptions.ProductNotFoundException;
 import com.productapp.repo.ProductRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,5 +54,22 @@ public class ProductServiceImpl implements ProductService {
         Product productToDelete=getById(id);
         productRepo.delete(productToDelete);
         return productToDelete;
+    }
+
+    //http://localhost:8090/productapp/products?sort=price
+    @Override
+    public List<Product> getAllProductSorted(String field) {
+        return productRepo.findAll(Sort.by(Sort.Direction.DESC, field));
+    }
+
+    //productpage?offset=4&pageSize=20
+    @Override
+    public Page<Product> getAllProductPage(int offset, int pageSize) {
+        return productRepo.findAll(PageRequest.of(offset, pageSize));
+    }
+
+    @Override
+    public Page<Product> getAllProductPageSorted(String field, int offset, int pageSize) {
+        return productRepo.findAll(PageRequest.of(offset, pageSize).withSort(Sort.by(field)));
     }
 }
