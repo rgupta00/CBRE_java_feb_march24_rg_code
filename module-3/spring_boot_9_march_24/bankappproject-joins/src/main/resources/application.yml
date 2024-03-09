@@ -1,0 +1,59 @@
+server:
+  port: 8090
+  servlet:
+    context-path: /bankapp
+spring:
+  jmx:
+    enabled: true
+  output:
+    ansi:
+      enabled: detect
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://localhost:3306/cbre?useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+logging:
+  pattern:
+   console: "%d{yyyy-MM-dd } [%thread] %-5level %logger{36} - %msg%n"
+   file: "%d{yyyy-MM-dd } [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    root: INFO
+    org.springframework.web: ERROR
+    com.bankapp: DEBUG
+    org.hibernate: ERROR
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+
+  info:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+    jmx:
+      exposure:
+        include: "*"
+
+info:
+  app:
+    name: bankapp
+    dev: busycoder
+    encoding: UTF-8
+    java:
+      source: 21
+      target: 21

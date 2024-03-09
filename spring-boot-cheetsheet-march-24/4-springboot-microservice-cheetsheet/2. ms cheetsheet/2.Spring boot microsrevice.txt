@@ -1,0 +1,465 @@
+Essential topics microservice with Spring boot 
+--------------------------------------------------
+Spring boot tools and technologies:
+----------------------------
+Eureka server
+Open Feign
+Ribbon/Spring cloud load balancer
+Hystric/Resilence4j
+Zuul api gateway/ spring cloud gateway
+Spring cloud configu serverdehradun 2 bhk flat price 
+ELK
+Spring boot grafana and prometheus
+Sluth and zipkin
+...
+....
+
+
+1. Spring boot logging
+2. Spring boot actuator
+3. eureka server configuration quick recap
+4. Resilence 4j
+5. Spring cloud gateway
+6. Spring boot config server, Spring boot property file configuration, loose coupling
+7. ELK
+8. Spring boot grafana and prometheus
+9. Sluth and zipkin
+
+
+
+
+
+
+
+
+1. spring boot logging
+=================================
+ 
+Disable logging :
+---------------
+logging.level.root=OFF
+logging.level.org.springframework.boot=OFF
+spring.main.banner-mode=OFF   
+    
+Customizing logging :
+---------------	     
+logging.level.com.productapp=info
+
+logging.level.org.springframework.web: DEBUG
+logging.level.org.hibernate: ERROR
+
+logging.file.name=/home/raj/Desktop/logs/server.log
+
+
+2. Spring boot actuator
+========================
+management.endpoints.web.exposure.include=*
+management.endpoints.jmx.exposure.include=*
+management.endpoints.web.base-path=/productapp
+management.endpoint.shutdown.enabled=true
+management.endpoint.health.show-details= always
+
+
+
+
+
+3. eureka server configuration quick recap
+===========================================
+
+Eureka server:Choose actuator, eureka server apply @EnableEurekaServer
+-----------
+server:
+  port: 8761
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+spring:
+  application:
+    name: eureka-server
+
+
+
+eureka client: actuator, eureka client, web
+-------------
+server:
+  port: 
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+spring:
+  application:
+    name: 
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+
+
+
+5. Resilence 4j: add resilience4j, aop, actuator
+===========================================
+
+
+Resilence 4j
+------------
+
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      weatherservice:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+
+
+  retry:
+    instances:
+      weatherservice:
+        maxRetryAttempts: 5
+        waitDuration: 20s
+
+
+
+
+5. API gateway
+========================
+
+API gateway
+---------
+server:
+  port: 8080
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: greetservice
+          uri: http://localhost:8181/
+          predicates:
+            - Path=/greet/**
+        - id: clientservice
+          uri: http://localhost:8282/
+          predicates:
+            - Path=/client/**
+            
+            
+server:
+  port: 8099
+spring:
+  application:
+    name: gateway-app
+  cloud:
+    gateway:
+      routes:
+      - id: couponappId
+        uri: lb://COUPON-APP
+        predicates:
+        - Path=/couponapp/**
+        
+
+
+            
+            
+With filter:
+---------------          
+server:
+  port: 8080
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: greetservice
+          uri: http://localhost:8181/
+          predicates:
+            - Path=/greet/**
+          filters:
+            - CustomFilter
+        - id: clientservice
+          uri: http://localhost:8282/
+          predicates:
+            - Path=/client/**
+          filters:
+            - CustomFilter
+
+Custom filter:
+----------
+@Component
+public class CustomFilter extends AbstractGatewayFilterFactory<CustomFilter.Config> {
+    public CustomFilter() {
+        super(Config.class);
+    }
+    @Override
+    public GatewayFilter apply(Config config) {
+        //Custom Pre Filter. Suppose we can extract JWT and perform Authentication
+        return (exchange, chain) -> {
+            System.out.println("First pre filter" + exchange.getRequest());
+            //Custom Post Filter.Suppose we can call error response handler based on error code.
+            return chain.filter(exchange).then(Mono.fromRunnable(() -> {
+                System.out.println("First post filter");
+            }));
+        };
+    }
+    public static class Config { }
+}
+
+
+
+
+6. Spring boot config server, Spring boot property file configuration, loose coupling
+=======================================================================================
+
+
+
+spring.application.name=configserver
+spring.cloud.config.server.git.uri=file://home/raj/Desktop/config
+#spring.cloud.config.server.git.clone-on-start=true
+server.port=8888
+spring.cloud.config.server.git.default-label=master
+
+
+
+
+@EnableConfigServer
+public class ConfigServerApplication {}
+
+check endpoint
+http://localhost:8888/application/default
+
+For remote git uri:
+spring.cloud.config.server.git.uri=https://github.com/rgupta00/config_server
+
+
+
+Configure config client:web, config client, actuator
+
+application.properties
+
+management.endpoints.web.exposure.include=*
+spring.config.import=optional:configserver:http://localhost:8888
+#spring.application.name=client-app
+
+@RestController
+public class Hello {
+
+	@Value("${spring.datasource.url: default value}")
+	private String url;
+	
+	@GetMapping("/")
+	public String sayHello() {return url;}
+}
+
+
+Refreshing properties at run time: better cloud-stream-bus
+@RefreshScope @RestController
+public class Hello {}
+
+chnage configuration and commit
+
+in client application use refresh endpoint
+
+http://localhost:8080/actuator/refresh
+
+
+7. ELK
+=========
+Step 1: download tools
+---------------------------
+https://www.elastic.co/downloads/past-releases/elasticsearch-6-5-1
+https://www.elastic.co/downloads/past-releases/kibana-6-5-1
+https://www.elastic.co/downloads/past-releases/logstash-6-5-1
+
+Step 2:
+
+Start elasticsearch(9200)
+-------------------
+ ./elasticsearch port No: localhost:9200
+
+start kibana(5601)
+--------------
+Uncomment the file kibana.yml to point to the elasticsearch instance. 
+elasticsearch url: http://localhost:9200
+
+./bin/kibana
+
+logstash
+-------------
+Create a configuration file named logstash.conf
+bin/logstash -f bin/logstash.conf
+
+http://localhost:9200/_cat/indices/?v
+http://localhost:9200/logstash-2022.08.02/_search
+
+logstash-*
+
+
+
+
+
+
+
+
+
+
+8. Spring boot grafana and prometheus
+======================================
+
+Prometheus: Hello world configuration:
+__________________________________
+
+Step 1: create spring boot application with actuator, and prometheus dep
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		
+		
+		
+server:
+  port: 8080
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: "*"
+  endpoint:
+    prometheus:
+      enabled: true
+    metrics:
+      enabled: true		
+		
+		
+
+step 2: download sw
+
+Download and configure Prometheus: run on port : 9090
+https://prometheus.io/download/
+
+download grafana:
+wget https://dl.grafana.com/enterprise/release/grafana-enterprise-9.5.2.linux-amd64.tar.gz
+
+
+Step 3: configure spring boot application monitoring to  Prometheus:
+	search google (configure prometheus to monitor itself)
+	
+	
+prometheus.yml
+-----------------
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+    monitor: 'codelab-monitor'
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['localhost:9090']
+ 
+  - job_name: 'spring-actuator'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 5s
+    static_configs:
+    - targets: ['localhost:8080']
+    
+    
+Start prometheus
+./prometheus 
+
+4.start grafana:
+ bin/grafana-server
+ http://localhost:9090
+up
+
+grafana dashboard
+http://localhost:3000/
+
+Dashboard-> new import -> grafana dashboard id -->put that id---> ui is created
+
+	 search google SpringBoot APM Dashboard
+
+
+
+
+9. Sluth and zipkin
+====================
+Step 1: create 2 projects and put logging in the code
+
+Step 2: put dependency:
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-sleuth</artifactId>
+		</dependency>
+		
+spring:
+  zipkin:
+    enabled=false
+    
+@Bean
+public Sampler defaultSampler() {
+	return Sampler.ALWAYS_SAMPLE;
+}
+
+Step 3: start zipkin jar (9411)
+
+Step 4:
+spring:
+  zipkin:
+    enabled=true
+    
+and put dependency in projects:
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-zipkin</artifactId>
+			<version>2.2.2.RELEASE</version>
+		</dependency>
+		
+Step 5: find traces
+http://localhost:9411/zipkin/
+	
+	
+    
+    
+    
+		
+		
+
+
+
+

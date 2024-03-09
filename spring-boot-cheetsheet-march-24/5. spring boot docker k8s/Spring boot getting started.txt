@@ -1,0 +1,132 @@
+
+public class Account {
+	private int id;
+	private String name;
+	private Double balance;
+}
+public interface AccountDao {
+	public List<Account> getAll();
+	public Account getById(int id);
+	public void updateAccount(Account account);
+	public void addAccount(Account account);
+	public void deleteAccount(int id);
+}
+
+
+public class AccountDaoCollectionImpl implements AccountDao{
+
+	private Map<Integer, Account> accounts=new HashMap<>();
+	
+	public AccountDaoCollectionImpl() {
+		accounts.put(1, new Account(1, "raj", 560000.00));
+		accounts.put(2, new Account(2, "ekta", 760000.00));
+	}
+	@Override
+	public List<Account> getAll() {
+		System.out.println("getAll using hard coded collection...");
+		return new ArrayList<Account>(accounts.values());
+	}
+
+	@Override
+	public Account getById(int id) {
+		return accounts.get(id);
+	}
+
+	@Override
+	public void updateAccount(Account account) {
+		accounts.put(account.getId(), account);
+	}
+
+	@Override
+	public void addAccount(Account account) {
+		
+	}
+
+	@Override
+	public void deleteAccount(int id) {
+		
+	}
+
+}
+
+
+
+public interface AccountService {
+	
+	public List<Account> getAll();
+	public Account getById(int id);
+	public void addAccount(Account account);
+	public void deleteAccount(int id);
+	public void transfer(int fromId, int toId, double amount);
+	public void deposit(int id,  double amount);
+	public void withdraw(int id, double amount);
+}
+
+
+UserInterface.TRANSFER_SUCCESS=transfer done successfully
+UserInterface.DEPOSIT_SUCCESS=amount deposit successfully
+UserInterface.WITHDRAW_SUCCESS=amount withdraw successfully!!
+
+Service.ACCOUNT_NOT_EXISTS=Account not exist
+
+Service.FROM_ACCOUNT_NOT_EXISTS=From Account not exist
+
+Service.TO_ACCOUNT_NOT_EXISTS=To Account not exist
+
+Service.NOT_SUFFICIENT_BALANCE=Account dont have sufficient balance
+
+
+spring.datasource.driver-class-name= com.mysql.jdbc.Driver
+spring.jpa.properties.hibernate.dialect= org.hibernate.dialect.MySQL5InnoDBDialect
+spring.jpa.hibernate.ddl-auto= update
+spring.datasource.url=jdbc:mysql://localhost:3306/edu123?useSSL=false
+spring.datasource.username=root
+spring.datasource.password=root
+
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+server.port=8090
+server.servlet.context-path=/bankapp
+
+
+
+ValidationMessages.properties
+
+account.email.absent=Please provide email address
+account.email.invalid=Please provide valid email address
+
+account.name.absent=Please provide customer name
+account.name.invalid=Name should contain only alphabets and space
+
+account.phone.absent=Please provide phone 
+account.phone.invalid=Please provide correct phone number of 10 digits
+
+account.balance.absent=Please provide initial balance 
+account.balance.invalid=Please provide correct initial balance bw 100 to 100000
+
+
+
+
+public class AccountDto {
+
+	private int id;
+	
+	@NotNull(message = "{account.name.absent}")
+	@Pattern(regexp = "[A-Za-z]+( [A-Za-z]+)*", message = "{account.name.invalid}")
+	private String name;
+	
+	@NotNull(message = "{account.balance.absent}")
+	@Range(min = 100, max = 100000, message = "{account.balance.invalid}")
+	private BigDecimal balance;
+
+	@Email(message = "{account.email.invalid}")
+	@NotNull(message = "{account.email.absent}")
+	private String email;
+	
+
+	@NotNull(message = "{account.phone.absent}")
+	@Pattern(regexp = "[789][0-9]{9}", message = "{account.phone.invalid}")
+	private String phone;
+}
+
