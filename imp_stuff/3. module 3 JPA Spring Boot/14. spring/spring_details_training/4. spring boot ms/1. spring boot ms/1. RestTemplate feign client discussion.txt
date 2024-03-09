@@ -1,0 +1,306 @@
+RestTemplate tutorial:
+______________________
+	=> RestTemplate is used to communication bw different spring boot application
+	=> key for microservice project development
+
+	=> Microservices communication is possible using RestTemplate
+	=> RestTemplate various method to intract bw diff microservices
+		=> methods:
+			xxxForObject()-getForObject(), postForObject(), getForEntity(), postForEntity()
+			xxxForEntity()
+			exchange()-calling Http POST/PUT/DELETE endpoint 
+
+	=> How to add base URL in RestTemplate
+	=> How to Add timout in RestTemplate
+	=> How to add interceptor in RestTemplate for centralized logging of request and response
+
+
+Example:
+________
+Refer employee application
+
+
+getForObject method:
+==================
+
+getting an object :
+____________________
+Employee emp=restTemplate.getForObject("http://localhost:8080/empapp/employee/2", Employee.class);
+
+getting an Employee by id :
+_________________________
+
+final String uri = "http://localhost:8080/empapp/employee/{id}";
+     
+Map<String, String> params = new HashMap<String, String>();
+params.put("id", "1");
+     
+Employee resultEmloyee = restTemplate.getForObject(uri, Employee.class, params);
+   
+
+
+getting an object as string:
+____________________________
+String empString=restTemplate.getForObject("http://localhost:8080/empapp/employee/2", String.class);
+
+
+getting all ussers:
+________________
+List forObject = restTemplate.getForObject("http://localhost:8080/empapp/employee", List.class);
+
+
+
+adding new employee:
+_______________________
+Employee e=new Employee("suman", 40);
+		Employee empSaved = restTemplate.postForObject("http://localhost:8080/empapp/employee", e, Employee.class);
+		System.out.println("-----------------------");
+		System.out.println(empSaved);
+
+
+
+
+xxxForEntity()-calling Http POST/PUT/DELETE endpoint 
+======================================================
+
+
+ getSingleObject
+_________________
+
+		
+	String baseUrl="http://localhost:8080/empapp";
+        String url = baseUrl + "/employee/2";
+        ResponseEntity<Employee> entity = restTemplate.getForEntity(url, Employee.class);
+        System.out.println(entity.getStatusCode());
+        System.out.println(entity.getBody());
+        System.out.println(entity.getHeaders());
+        
+	HttpHeaders responseHeaders = entity.getHeaders();
+        System.out.println("response Headers - " + responseHeaders);
+
+
+
+
+
+ getForEntity
+ _______
+
+      	String baseUrl="http://localhost:8080/empapp";
+        String url = baseUrl + "/employee";
+        ResponseEntity<List> entity = restTemplate.getForEntity(url, List.class);
+        System.out.println(entity.getStatusCode());
+        List<?> employees=entity.getBody();
+        employees.forEach(e-> System.out.println(e));
+		
+   
+
+
+ 
+ postForEntity:
+ _______
+	Employee employee=new Employee("indu", 44);
+		
+		String baseUrl="http://localhost:8080/empapp";
+        String url = baseUrl + "/employee";
+        ResponseEntity<Employee> entity = restTemplate.postForEntity(url, employee, Employee.class);
+        System.out.println(entity.getStatusCode());
+        Employee employeesAdded=entity.getBody();
+        System.out.println(employeesAdded);
+
+
+  
+deleteEmployee: delete
+_________
+
+       String url="http://localhost:8080/empapp/7";
+        restTemplate.delete(url);
+       	System.out.println("deleted....");
+
+
+updateUser
+___________
+
+        Employee employee=new Employee("suman", 23);
+        restTemplate.put("http://localhost:8080/empapp/employee/6", employee);
+       	System.out.println("updated....");
+
+
+exchange()-calling Http POST/PUT/DELETE endpoint 
+_____________________________
+
+Getting all users:
+_________________
+
+ 	String baseUrl="http://localhost:8080/empapp";
+        String url = baseUrl + "/employee";
+       
+        HttpHeaders headers=new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        
+        HttpEntity<Object> requestEntity=new HttpEntity<Object>(headers);
+        
+        ResponseEntity<List> exchange = restTemplate.exchange(url, HttpMethod.GET, requestEntity, List.class);
+        
+        System.out.println("status: "+ exchange.getStatusCode());
+        List empList=exchange.getBody();
+     
+        empList.forEach(e-> System.out.println(e));
+        
+        System.out.println("header values: "+ exchange.getHeaders());
+
+
+
+
+Getting an specific Employee:
+___________________________
+
+ 		String baseUrl="http://localhost:8080/empapp";
+		String url = baseUrl + "/employee/6";
+		
+		 HttpHeaders headers=new HttpHeaders();
+	     headers.setContentType(MediaType.APPLICATION_JSON);
+	        
+		HttpEntity<Object> requestEntity=new HttpEntity<Object>(headers);
+		ResponseEntity<Employee> response=restTemplate.exchange(url, HttpMethod.GET, requestEntity, 		Employee.class);
+		
+		System.out.println(response.getStatusCode());
+		Employee employee=response.getBody();
+		System.out.println(employee);
+
+
+
+
+
+adding an Employee:
+______________
+		String baseUrl="http://localhost:8080/empapp";
+		String url = baseUrl + "/employee";
+		
+		HttpHeaders headers=new HttpHeaders();
+	    	headers.setContentType(MediaType.APPLICATION_JSON);
+	    
+	    	//create an new user to add to db
+	    	Employee emp=new Employee("prem", 50);
+	    
+	        
+		HttpEntity<Object> requestEntity=new HttpEntity<Object>(emp, headers);
+		
+		
+		ResponseEntity<Employee> response=restTemplate
+			.exchange(url, HttpMethod.POST, requestEntity, Employee.class);
+		
+		System.out.println(response.getStatusCode());
+		Employee employee=response.getBody();
+		System.out.println(employee);
+
+        	HttpHeaders responseHeaders = response.getHeaders();
+        	System.out.println("response Headers - " + responseHeaders);
+
+
+updating an Employee:
+______________________
+ 		String baseUrl="http://localhost:8080/empapp";
+		String url = baseUrl + "/employee";
+		
+	     HttpHeaders headers=new HttpHeaders();
+	    headers.setContentType(MediaType.APPLICATION_JSON);
+	    
+	    //user to update
+	    Employee emp=new Employee("prem", 52);
+	    
+	        
+	HttpEntity<Object> requestEntity=new HttpEntity<Object>(emp, headers);
+		
+		
+	ResponseEntity<Employee> response=restTemplate
+		.exchange(url, HttpMethod.PUT, requestEntity, Employee.class);
+		
+		System.out.println(response.getStatusCode());
+		Employee employee=response.getBody();
+		System.out.println(employee);
+
+
+
+
+deleting an Employee:
+______________________
+
+		String baseUrl="http://localhost:8080/empapp";
+		String url = baseUrl + "/employee/7";
+
+ 	ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.DELETE,requestEntity, String.class);
+        HttpStatus statusCode = responseEntity.getStatusCode();
+        System.out.println("status code - " + statusCode);
+        String userDetails = responseEntity.getBody();
+        System.out.println("response body - " + userDetails);
+        HttpHeaders responseHeaders = responseEntity.getHeaders();
+        System.out.println("response Headers - " + responseHeaders);
+
+
+
+
+
+
+
+Feign client:
+______________
+Feign is a declarative web service client.
+ It makes writing web service clients easier.
+
+ To use Feign create an interface and annotate it.
+ 
+ Feign is a declarative framework developed by Netflix for implementing REST API clients.
+
+
+Steps to integrate Open Feign
+______________________________
+
+1 - Needs to add openfeign + devtools + web 
+
+2 - Enable open feign from application class 
+	@EnableFeignClients("com.Employee.model.service")
+3 - Create interface and annotate with FeignClient
+
+
+
+
+@SpringBootApplication
+@EnableFeignClients("com.employee.model.service")
+public class CustomerServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(CustomerServiceApplication.class, args);
+    }
+}
+
+
+
+@FeignClient(name = "employee-service", url ="http://localhost:8082/employees")
+//@FeignClient(name = "employee-service")
+public interface EmployeeServiceProxy {
+  @GetMapping
+ ResponseEntity employeeList();
+
+ @GetMapping("/{id}")
+ ResponseEntity getEmployeeById(@PathVariable("id") Long id);
+
+ @PostMapping
+ ResponseEntity addEmployee(@RequestBody Book book);
+
+ @PutMapping
+ ResponseEntity updateEmployee(@RequestBody Employee employee);
+
+ @DeleteMapping("/{id}")
+ ResponseEntity deleteEmployee(@PathVariable("id") Long id);
+}
+
+
+Now use in client application:
+____________________________
+
+
+@Autowired
+private EmployeeServiceProxy employeeServiceProxy;
+
+EmployeeServiceProxy.employeeList().getBody()
+.....
+

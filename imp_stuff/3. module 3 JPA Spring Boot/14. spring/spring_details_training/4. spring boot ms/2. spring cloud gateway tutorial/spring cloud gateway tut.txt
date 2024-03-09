@@ -1,0 +1,389 @@
+Spring cloud API Gateway
+____________________
+
+step 1: create greeting ms
+____________________________
+
+1. create spring boot project with name greeting-service with dependency web, devtool, actuator
+
+2. create controller
+
+@RestController
+@RequestMapping("/greet")
+public class GreetingController {
+	@GetMapping("/greeting")
+	public String getMessage() {
+		return "Welcome to greeting service";
+	}
+}
+
+
+3. configuration :
+
+
+spring:
+  application:
+    name: greeting-service 
+server:
+  port: 8181
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+
+
+step 2: create user ms
+_________________________
+
+1. create spring boot project with name user-service with dependency web, devtool, actuator
+
+2. create controller
+
+@RestController
+@RequestMapping("/user")
+public class UserController {
+	@Autowired
+	private RestTemplate template;
+
+	@GetMapping("/accessAPI")
+	public String invokeGreetingService() {
+		return template.getForObject("http://localhost:8181/greet/greeting", String.class);
+	}
+
+}
+
+3. configure rest template in main class
+
+@SpringBootApplication
+public class UserServiceApplication {
+
+	@Bean
+	public RestTemplate template() {
+		return new RestTemplate();
+	}
+	
+	
+	public static void main(String[] args) {
+		SpringApplication.run(UserServiceApplication.class, args);
+	}
+}
+
+
+4. configuration :
+
+spring:
+  application:
+    name: user-service
+server:
+  port: 8282
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+
+
+
+
+
+Using Spring Cloud Gateway we can create routes in either of the two ways -
+_________________________________________________________________________
+1) Use java based configuration to programmatically create routes
+2) Use property based configuration(i.e application.properties or application.yml) to create routes.
+
+   
+
+
+
+Step 3: configure spring cloud gateway :
+_________________________________________
+
+1. create gatway-service project with devtools, actuator, gatway dependency
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-gateway</artifactId>
+		</dependency>
+	</dependencies>
+
+
+
+2. property based configuration
+
+Define the application.yml as follows-
+server:
+  port: 8080
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: greetingModule
+        uri: http://localhost:8181/
+        predicates:
+        - Path=/greet/**
+      - id: userModule
+        uri: http://localhost:8282/
+        predicates:
+        - Path=/user/**
+
+
+http://localhost:8080/user/accessAPI
+http://localhost:8181/greet/greeting
+
+
+
+Step 4: Java based configuration
+_______________________________
+
+Create the configuration class where we define the route configurations. 
+Gateway Handler resolves route configurations by using RouteLocator Bean.
+
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class SpringCloudConfig {
+
+    @Bean
+    public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
+    	 return builder.routes()
+    	            .route(r -> r.path("/greet/**").uri("http://localhost:8181/"))
+    	            .route(r -> r.path("/user/**").uri("http://localhost:8282/"))
+    	            .build();
+    }
+
+}
+
+Now we can comment configuration related to yml as we have done java configuration
+server:
+  port: 8080
+#spring:
+#  cloud:
+#    gateway:
+#      routes:
+#      - id: greetingModule
+#        uri: http://localhost:8181/
+#        predicates:
+#        - Path=/greet/**
+#      - id: userModule
+#        uri: http://localhost:8282/
+#        predicates:
+#        - Path=/user/**
+
+
+
+
+Cloud Gateway Filters Example
+_____________________________
+Using Predicates Spring Cloud Gateway determines which route should get called.
+ Once decided the request is the routed to the intended microservice. 
+
+Before routing this request we can apply some filters to the request. 
+
+These filters are known as pre filters. 
+After applying the filters the intended micoservice call is made and the response is returned back to the Spring Cloud Gateway which returns this response back to the caller. 
+Before returning the response we can again apply some filters to this response. 
+Such filters are called post filters
+
+
+Implementing Spring Cloud Gateway Filters
+_________________________________________
+
+Spring Cloud Gateway filters can be classified as
+____________________________________________________
+
+Spring Cloud Gateway Pre Filters
+Spring Cloud Gateway Post Filters
+
+
+
+Spring Cloud Filters can be implemented in following two ways-
+___________________________________________________________
+
+Spring Cloud Gateway Filters using Java Configuration
+Spring Cloud Gateway Filters using Property Configuration
+
+
+Spring Cloud Gateway Filters using Java Configuration
+__________________________________________
+
+@Configuration
+public class SpringCloudConfig {
+
+	@Bean
+	public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
+		return builder.routes()
+				.route(r -> r.path("/employee/**")
+				//Pre and Post Filters provided by Spring Cloud Gateway
+						.filters(f -> f.addRequestHeader("first-request", "first-request-header")
+							.addResponseHeader("first-response", "first-response-header"))
+						.uri("http://localhost:8081/")
+						.id("employeeModule"))
+
+				.route(r -> r.path("/consumer/**")
+				//Pre and Post Filters provided by Spring Cloud Gateway
+					.filters(f -> f.addRequestHeader("second-request", "second-request-header")
+						.addResponseHeader("second-response", "second-response-header"))
+						.uri("http://localhost:8082/")
+						.id("consumerModule"))
+				.build();
+	}
+
+}
+   
+
+Now we need to chnage GreetingController: to access that header
+
+@RestController
+@RequestMapping("/greet")
+public class GreetingController {
+	@GetMapping("/greeting")
+	public String getMessage(@RequestHeader("first-request") String header) {
+		System.out.println(header);
+		return "Welcome to greeting service";
+	}
+}
+
+Implementing Spring Cloud Gateway Filters using Property based Configuration
+_____________________________________________________________________________
+server:
+  port: 8080
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: greetingModule
+        uri: http://localhost:8181/
+        predicates:
+        - Path=/greet/**
+         filters:
+        - AddRequestHeader=first-request, first-request-header
+        - AddResponseHeader=first-response, first-response-header
+      - id: userModule
+        uri: http://localhost:8282/
+        predicates:
+        - Path=/user/**
+        filters:
+        - AddRequestHeader=second-request, second-request-header
+        - AddResponseHeader=second-response, second-response-head
+
+
+
+
+Spring Cloud Gateway + Neflix Eureka Discovery Service-property file configuration
+____________________________________________________________________________________
+
+server:
+  port: 8080
+ 
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8083/eureka 
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      routes:
+      - id: employeeModule
+        uri: lb://FIRST-SERVICE
+        predicates:
+        - Path=/employee/**
+      - id: consumerModule
+        uri: lb://SECOND-SERVICE
+        predicates:
+        - Path=/consumer/**
+
+
+Spring Cloud Gateway + Neflix Eureka Discovery Service-Java configuration
+________________________________________________________________________
+
+@Configuration
+public class SpringCloudConfig {
+
+    @Bean
+    public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
+        return builder.routes()
+                .route(r -> r.path("/employee/**")
+                        .uri("lb://FIRST-SERVICE")
+                        .id("employeeModule"))
+
+                .route(r -> r.path("/consumer/**")
+                        .uri("lb://SECOND-SERVICE")
+                        .id("consumerModule"))
+                .build();
+    }
+
+}
+
+
+
+
+
+
+cloud gatway	: better alternative of zuul api gateway
+_______________________________________________________
+
+https://www.javainuse.com/spring/cloud-gateway
+
+
+
+
+server:
+  port: 8100
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: customerModule
+        uri: http://localhost:8081/
+        predicates:
+        - Path=/customer/**
+      - id: productModule
+        uri: http://localhost:8083/
+        predicates:
+        - Path=/product/**
+      - id: orderModule
+        uri: http://localhost:8080/
+        predicates:
+        - Path=/order/**
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+
+server:
+  port: 8100
+spring:
+  application:
+    name: spring-cloud-gateway
+  cloud:
+    gateway:
+      routes:
+      - id: customerModule
+        uri:  lb://CUSTOMER-SERVICE
+        predicates:
+        - Path=/customer/**
+      - id: productModule
+        uri:  lb://PRODUCT-SERVICE
+        predicates:
+        - Path=/product/**
+      - id: orderModule
+        uri:  lb://ORDER-SERVICE
+        predicates:
+        - Path=/order/**
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+

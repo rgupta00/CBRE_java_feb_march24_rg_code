@@ -1,0 +1,1381 @@
+Spring MVC hibernate bookstore step by step:
+=============================================
+
+Step 1: Dao layer:
+-------------
+
+@Entity
+public class Book {
+	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+	private int id;
+	private String isbn;
+	private String title;
+	private Double price;
+	private String author;
+	private String publisher;
+	private Date pubDate;
+
+
+public interface BookDao {
+	public Book add(Book book);
+	public Book delete(int bookId);
+	public Book update(Book book);
+	public Book getById(int bookId);
+	public Book getByIsbn(String isbn);
+	public List<Book> getAll();
+}
+
+
+@Repository
+public class BookDaoImpl implements BookDao {
+
+	@Autowired
+	private SessionFactory factory;
+
+	private Session getSession() {
+		return factory.getCurrentSession();
+	}
+
+	@Override
+	public Book add(Book book) {
+		getSession().save(book);
+		return book;
+	}
+
+	@Override
+	public Book delete(int bookId) {
+		Book book = getById(bookId);
+		if (book != null)
+			getSession().delete(book);
+		return book;
+
+	}
+
+	@Override
+	public Book update(Book book) {
+		getSession().merge(book);
+		return book;
+	}
+
+	@Override
+	public Book getById(int bookId) {
+		return getSession().get(Book.class, bookId);
+	}
+
+	@Override
+	public Book getByIsbn(String isbn) {
+		return null;
+	}
+
+	@Override
+	public List<Book> getAll() {
+		return getSession().createQuery("from Book").list();
+	}
+
+}
+
+
+service layer:
+---------------
+public interface BookService {
+	public Book add(Book book);
+	public Book delete(int bookId);
+	public Book update(Book book);
+	public Book getById(int bookId);
+	public Book getByIsbn(String isbn);
+	public List<Book> getAll();
+}
+
+
+
+@Service(value="bs")
+@Transactional
+public class BookServiceImpl implements BookService{
+
+	@Autowired
+	private BookDao bookDao;
+	
+	@Override
+	public Book add(Book book) {
+		return bookDao.add(book);
+	}
+
+	@Override
+	public Book delete(int bookId) {
+		return bookDao.delete(bookId);
+	}
+
+	@Override
+	public Book update(Book book) {
+		return bookDao.update(book);
+	}
+
+	@Override
+	public Book getById(int bookId) {
+		return bookDao.getById(bookId);
+	}
+
+	@Override
+	public Book getByIsbn(String isbn) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Book> getAll() {
+		return bookDao.getAll();
+	}
+
+}
+
+
+
+db.properties
+-----------------
+driver=com.mysql.cj.jdbc.Driver
+url=jdbc:mysql://localhost:3306/raj_exp
+username=root
+password=root
+
+
+
+
+Spring hibernate configuration file:
+-------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+	<!-- config of model bean -->
+	
+	<context:component-scan base-package="com.bookapp.model"/>
+	
+	
+	<context:property-placeholder location="classpath:db.properties"/>
+	<!--  it force to convert all db related error to be wrapped by DataAccessException so that
+	i can write aop based handler to handle it without thing whether i am using hibernate
+	jdbc.... -->
+	<bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
+	
+	<bean id="ds" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="${jdbc.drivername}"/>
+		<property name="url" value="${jdbc.url}"/>
+		<property name="username" value="${jdbc.username}"/>
+		<property name="password" value="${jdbc.password}"/>
+	</bean>
+	
+	<bean id="sf" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="ds"/>
+		<property name="packagesToScan">
+			<list>
+				<value>com.bookapp.model.dao</value>
+			</list>
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL57Dialect</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.format_sql">true</prop>
+			</props>
+		</property>
+	</bean>
+	
+	
+	<bean id="tm" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sf"/>
+	</bean>
+	
+	<tx:annotation-driven transaction-manager="tm"/>
+
+</beans>
+
+
+
+
+
+
+testing sring hibernate application:
+-----------------------------------
+	ApplicationContext ctx=new ClassPathXmlApplicationContext("beans.xml");
+		
+		Book book=new Book("AB123", "java is fun", 200.9,"raj", "wrox", new Date());
+		BookService service=ctx.getBean("bs", BookService.class);
+		
+		service.add(book);
+
+
+
+
+Spring AOP
+===========
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Loggable {
+}
+
+
+@Component
+@Aspect
+public class MethodLogger {
+
+	@Around("@annotation(Loggable)")
+	public Object around(ProceedingJoinPoint point) throws Throwable {
+		System.out.println("logging is done...");
+		Object result = point.proceed();
+		return result;
+	}
+}
+
+
+
+
+
+
+
+Step 3: Spring MVC xml configuration
+=====================================
+
+1. configuration front controller- dispacher servlet
+2. configure servlet context listner
+3. configure view resolver
+
+
+	<servlet>
+		<servlet-name>mvc</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:mvc-config.xml</param-value>
+		</init-param>
+		
+		<init-param>
+			<param-name>throwExceptionIfNoHandlerFound</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+
+	<servlet-mapping>
+		<servlet-name>mvc</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+
+
+	
+	<!-- needed for ContextLoaderListener -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:model-config.xml</param-value>
+	</context-param>
+
+	<!-- Bootstraps the root web application context before servlet initialization -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+
+
+
+import java.util.Arrays;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.bookapp.model.dao.Book;
+import com.bookapp.model.service.BookNotFoundException;
+import com.bookapp.model.service.BookService;
+
+@Controller
+public class BookController {
+
+	@Autowired
+	private BookService service;
+
+	@ModelAttribute(value="publishers")
+	public List<String> getAllPublishers(){
+		return Arrays.asList("pbp","wrox","headfirst");
+	}
+	
+	@RequestMapping(value = "getallbooks", method = RequestMethod.GET)
+	public ModelAndView getAllBooks(ModelAndView mv) {
+		mv.setViewName("show_books");
+		mv.addObject("books", service.getAll());
+		return mv;
+	}
+
+	@RequestMapping(value = "addbook", method = RequestMethod.GET)
+	public String addBook(Model model) {
+		model.addAttribute("book", new Book());
+		return "add_book";
+	}
+	
+	@RequestMapping(value = "update", method = RequestMethod.GET)
+	public String updateBook(HttpServletRequest request , ModelMap model) {
+		
+		Integer bookId=Integer.parseInt(request.getParameter("id"));
+		Book bookToUpdate=service.getById(bookId);
+		model.addAttribute("book",bookToUpdate );
+		return "add_book";
+	}
+
+	@RequestMapping(value = "delete", method = RequestMethod.GET)
+	public String deleteBook(HttpServletRequest request ) {
+		
+		Integer bookId=Integer.parseInt(request.getParameter("id"));
+		service.delete(bookId);
+		return "redirect:getallbooks";
+	}
+
+	
+	@RequestMapping(value = "addbook", method = RequestMethod.POST)
+	public String addBookPost(@ModelAttribute(value="book") @Valid Book book, BindingResult bindingResult) {
+		if(bindingResult.hasErrors()){
+			return "add_book";
+		}else{
+		if(book.getId()==0)
+			service.add(book);
+		else
+			service.update(book);
+		}
+		return "redirect:getallbooks";
+	}
+
+	
+}
+
+
+
+JSP:
+--------
+
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
+<head>
+
+<style type="text/css">
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+
+</head>
+<body>
+<table>
+    <thead>
+        <tr>
+            <th>id</th>
+            <th>isbn</th>
+            <th>title</th>
+            <th>author</th>
+            <th>pub date</th>
+            <th>price</th>
+            <th>book type</th>
+            <th>update</th>
+            <th>delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        <c:forEach items="${books}" var="book">
+            <tr>
+                <td>${book.id}</td>
+                <td>${book.isbn}</td>
+                <td>${book.title}</td>
+                <td>${book.author}</td>
+                <td><fmt:formatDate  pattern="dd/MM/yyyy" value="${book.pubDate}"/></td>
+                <td>${book.price}</td>
+                 <td>${book.bookType}</td>
+                <td><a href="updatebook?id=${book.id}">update book</a></td>
+                <td><a href="deletebook?id=${book.id}">delete book</a></td>
+            </tr>
+        </c:forEach>
+    </tbody>
+</table>
+<a href="addbook">addbook</a>
+</body>
+</html>
+
+
+
+
+addbook.jsp:
+--------------
+
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<style>
+.error {
+color: #EF1313;
+font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<form:form action="addbook" method="post" modelAttribute="book">
+	<form:hidden path="id" value="0"/>
+	<table>
+		<tr>
+			<td>Enter isbn</td>
+			<td><form:input path="isbn"/></td>
+		</tr>
+		<tr>
+			<td>Enter title</td>
+			<td><form:input path="title"/></td>
+		</tr>
+		<tr>
+			<td>Enter author</td>
+			<td><form:input path="author"/></td>
+		</tr>
+		<tr>
+			<td>Enter pub Date</td>
+			<td><form:input path="pubDate"/></td>
+		</tr>
+		<tr>
+			<td>Enter price</td>
+			<td><form:input path="price"/></td>
+		</tr>
+		<tr>
+			<td>Select book type</td>
+			<td><form:select path="bookType" items="${booktypes}"/></td>
+		</tr>
+		
+		<tr>
+			<td><input type="submit"></td>
+		</tr>
+	</table>
+</form:form>
+</body>
+</html>
+
+
+update book:
+----------
+<form:form action="addbook" method="post" modelAttribute="book">
+	<form:hidden path="id"/>
+	<table>
+		<tr>
+			<td>Enter isbn</td>
+			<td><form:input path="isbn" readonly="true"/></td>
+		</tr>
+		<tr>
+			<td>Enter title</td>
+			<td><form:input path="title" readonly="true"/></td>
+		</tr>
+		<tr>
+			<td>Enter author</td>
+			<td><form:input path="author" readonly="true"/> </td>
+		</tr>
+		<tr>
+			<td>Enter pub Date</td>
+			<td><form:input path="pubDate" readonly="true"/></td>
+		</tr>
+		<tr>
+			<td>Enter price</td>
+			<td><form:input path="price"/></td>
+		</tr>
+		<tr>
+			<td>Select book type</td>
+			<td><form:select path="bookType" items="${booktypes}"/></td>
+		</tr>
+		<tr>
+			<td><input type="submit"></td>
+		</tr>
+	</table>
+</form:form>
+
+
+
+
+
+
+
+
+
+
+jsr 303 validation:
+---------------------
+step 1: put jars in classpath
+step 2: put annoation on pojo
+
+
+@Entity
+@Table(name="book_table_spring_hib_2")
+public class Book {
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private int id;
+
+	@NotEmpty(message="isbn can be left blank")
+	@Column(unique=true)
+	private String isbn;
+	
+	@NotEmpty(message="title can be left blank")
+	private String title;
+	
+	@NotEmpty(message="author can be left blank")
+	private String author;
+	
+	@Past
+	@NotNull(message="date can not be left blank")
+	@DateTimeFormat(pattern = "dd/MM/yyyy")
+	@Temporal(TemporalType.DATE)
+	private Date pubDate;
+	
+	@NotNull(message="price can not be null")
+	@Min(value=50, message="min price should be more then 50")
+	@Max(value=10000, message="max price should be less then 10000")
+	private Double price;
+	
+	@Enumerated(EnumType.STRING)
+	private BookType bookType;
+
+
+
+ update controller code to handle validation: @valid annotation
+--------------------------------------------------
+
+	@RequestMapping(value = "addbook", method = RequestMethod.POST)
+	public String addBookPost(@ModelAttribute(value="book") @Valid Book book, BindingResult bindingResult) {
+		if(bindingResult.hasErrors()){
+			return "add_book";
+		}else{
+		if(book.getId()==0)
+			service.add(book);
+		else
+			service.update(book);
+		}
+		return "redirect:getallbooks";
+	}
+
+	
+
+
+
+
+<style>
+.error {
+color: #EF1313;
+font-style: italic;
+}
+</style>
+
+<form:form action="addbook" method="post" modelAttribute="book">
+	<form:hidden path="id" value="0"/>
+	<table>
+		<tr>
+			<td>Enter isbn</td>
+			<td><form:input path="isbn"/><form:errors path="isbn" class="error"/></td>
+		</tr>
+		<tr>
+			<td>Enter title</td>
+			<td><form:input path="title"/><form:errors path="title" class="error"/></td>
+		</tr>
+		<tr>
+			<td>Enter author</td>
+			<td><form:input path="author"/><form:errors path="author" class="error"/></td>
+		</tr>
+		<tr>
+			<td>Enter pub Date</td>
+			<td><form:input path="pubDate"/><form:errors path="pubDate" class="error"/></td>
+		</tr>
+		<tr>
+			<td>Enter price</td>
+			<td><form:input path="price"/><form:errors path="price" class="error"/></td>
+		</tr>
+		<tr>
+			<td>Select book type</td>
+			<td><form:select path="bookType" items="${booktypes}"/></td>
+		</tr>
+		
+		<tr>
+			<td><input type="submit"></td>
+		</tr>
+	</table>
+</form:form>
+</body>
+</html>
+
+
+
+using property file for externalization of error messages:
+-----------------------------------------------------------
+
+step 1: create error message configuraion file
+-----------------------------------------------
+
+
+NotEmpty.book.isbn=isbn can not left blank!!
+typeMismatch.java.lang.Double=please enter numbers only
+typeMismatch.java.util.Date=please enter dates only (dd/mm/yyyy formate)
+
+
+Step 2: configure ReloadableResourceBundleMessageSource and LocalValidatorFactoryBean bean
+-----------------------------------------------------------------------------------------
+
+<mvc:annotation-driven validator="validatorFactoryBean"/>
+	
+	<bean id="messageSource"
+		class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basename" value="classpath:validation" />
+	</bean>
+
+	<bean id="validatorFactoryBean"
+		class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+		<property name="validationMessageSource" ref="messageSource" />
+	</bean>
+
+
+
+Exception handler:
+----------------
+
+Handling book not found excpeption:
+-------------------------------------
+
+
+@ExceptionHandler(BookNotFoundException.class)
+	public ModelAndView handleBookNotFoundException(HttpServletRequest request, Exception ex){
+		ModelAndView modelAndView = new ModelAndView();
+	    modelAndView.addObject("exception", ex);
+	    modelAndView.addObject("url", request.getRequestURL());
+	    
+	    modelAndView.setViewName("error");
+	    return modelAndView;
+	}	
+
+
+
+
+@ControllerAdvice
+public class GlobalDefaultHandler {
+
+	@ExceptionHandler(NoHandlerFoundException.class)
+	public ModelAndView handlerNotFoundEx() {
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("404");
+		mv.addObject("error", "resource/page not found");
+		return mv;
+	}
+
+	@ExceptionHandler(DataAccessException.class)
+	public String handleDataAccessException(HttpServletRequest request,
+			Exception ex) {
+		ModelAndView mv = new ModelAndView();
+		mv.addObject("exception", ex);
+		mv.addObject("url", request.getRequestURL());
+		return "database_error";
+	}
+}
+
+
+
+
+handle static resources:
+-------------------------
+https://javawebtutor.com/articles/spring/configuring-static-resources-in-spring-mvc.php#:~:text=Place%20static%20resources%20like%20css,Spring%20tag%20spring%3Aurl%20tag.
+
+
+step 1: create css
+-------------------
+webapp-> resources--> css--> forms.css
+
+
+.error {
+color: #EF1313;
+font-style: italic;
+}
+input[type=text], select {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+input[type=submit] {
+  width: 100%;
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+input[type=submit]:hover {
+  background-color: #45a049;
+}
+
+div {
+  border-radius: 5px;
+  background-color: #f2f2f2;
+  padding: 20px;
+}
+
+step 2:
+-----
+ allow static resources:
+
+ <mvc:resources mapping="/resources/**" location="/resources/" cache-period="31556926"/> 
+
+
+
+step 3:
+-------
+<head>
+
+<title>HCL internal bank</title>
+<link href="${pageContext.request.contextPath}/resources/css/forms.css" rel="stylesheet">
+</head>
+
+
+
+
+
+
+
+
+
+Spring mvc interceptor:
+---------------------
+	=> Spring Interceptor are used to intercept client requests and process them. 
+	
+	=> Sometimes we want to intercept the HTTP Request and do some processing before handing it over to the 		controller handler methods. That’s where Spring MVC Interceptor come han
+
+
+	=> Spring HandlerInterceptor declares three methods based on 
+		where we want to intercept the HTTP request.
+
+	boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler):
+	-------------------------------------------------------------------------------------------
+	=> This method is used to intercept the request before it’s handed over to the handler method. 
+
+	=> This method should return ‘true’ to let Spring know to process the request through another spring
+		 interceptor or to send it to handler method if there are no further spring interceptors.
+
+	=> If this method returns ‘false’ Spring framework assumes that request has been handled by the spring 			interceptor itself and no further processing is needed.
+
+	We should use response object to send response to the client request in this case.
+
+	Object handler is the chosen handler object to handle the request. 
+	This method can throw Exception also, in that case Spring MVC Exception Handling 
+	should be useful to send error page as response.
+
+	void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView 		modelAndView): 
+ -------------------------------------------------------------------------------------------
+
+	This HandlerInterceptor interceptor method is called when HandlerAdapter has invoked 
+	the handler but DispatcherServlet is yet to render the view. This method can be used to add 
+	additional attribute to the ModelAndView object to be used in the view pages. 
+	We can use this spring interceptor method to determine the time taken by handler method to 
+	process the client request.
+
+void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex):
+-------------------------------------------------------------------------------------------
+	 This is a HandlerInterceptor callback method that is called 
+	once the handler is executed and view is rendered.
+
+Configuration:
+--------------
+
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/hello" />
+			<bean
+				class="com.bookapp.web.controller.RequestProcessingTimeInterceptor"></bean>
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+
+
+interceptor example:
+---------------------
+public class RequestProcessingTimeInterceptor extends HandlerInterceptorAdapter {
+
+	private static final Logger logger = LoggerFactory.getLogger(RequestProcessingTimeInterceptor.class);
+
+	@Override
+	public boolean preHandle(HttpServletRequest request,
+			HttpServletResponse response, Object handler) throws Exception {
+
+		long startTime = System.currentTimeMillis();
+		logger.info("Request URL::" + request.getRequestURL().toString()
+				+ ":: Start Time=" + System.currentTimeMillis());
+		request.setAttribute("startTime", startTime);
+		//if returned false, we need to make sure 'response' is sent
+		return true;
+	}
+
+	@Override
+	public void postHandle(HttpServletRequest request,
+			HttpServletResponse response, Object handler,
+			ModelAndView modelAndView) throws Exception {
+		System.out.println("Request URL::" + request.getRequestURL().toString()
+				+ " Sent to Handler :: Current Time=" + System.currentTimeMillis());
+		//we can add attributes in the modelAndView and use that in the view page
+	}
+
+	@Override
+	public void afterCompletion(HttpServletRequest request,
+			HttpServletResponse response, Object handler, Exception ex)
+			throws Exception {
+		long startTime = (Long) request.getAttribute("startTime");
+		logger.info("Request URL::" + request.getRequestURL().toString()
+				+ ":: End Time=" + System.currentTimeMillis());
+		logger.info("Request URL::" + request.getRequestURL().toString()
+				+ ":: Time Taken=" + (System.currentTimeMillis() - startTime));
+	}
+
+}
+
+
+
+https://www.journaldev.com/2676/spring-mvc-interceptor-example-handlerinterceptor-handlerinterceptoradapter
+
+
+how to configure interceptor with wild card?
+-------------------------------------
+
+<mvc:interceptors>
+	<mvc:interceptor>
+			<mvc:mapping path="/**" />
+			<bean
+				class="com.bookapp.web.controller.RequestProcessingTimeInterceptor"></bean>
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+
+
+excluding-some-defined-paths:
+----------------------------
+
+<mvc:interceptors>
+	<mvc:interceptor>
+			<mvc:mapping path="/**" />
+			 <mvc:exclude-mapping path="/hello2"/>
+			<bean
+				class="com.bookapp.web.controller.RequestProcessingTimeInterceptor"></bean>
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+https://stackoverflow.com/questions/9908124/spring-mvc-3-interceptor-on-all-excluding-some-defined-paths
+
+
+
+
+
+
+
+
+
+
+
+
+
+Spring service layer test:
+----------------------
+@ContextConfiguration(locations= {"classpath:model-config.xml"})
+@RunWith(SpringRunner.class)
+@Transactional
+public class BookServiceImplTest {
+
+	@Autowired
+	private BookService bookService;
+	//we want to test crud operation
+	
+	//get all books
+	@Test
+	public void getAllBooksTest() {
+		List<Book>books=bookService.getAllBooks();
+		Assert.assertEquals(4, books.size());
+	}
+
+	//@Rollback(true) => by default
+	//spring test: @Tranactional in spring test: it is intellegent it know that it should not commit changes to db
+	//@Rollback(true) => foolish idea
+	@Test
+	public void addBookTest() {
+		
+		Book book=new Book("EQ1T23", "java", "raj", new Date(), 600.0, BookType.IT);
+		Book bookAdded= bookService.addBook(book);
+		
+		boolean isEqual=book.equals(bookAdded);
+		
+		Assert.assertTrue(isEqual);
+		
+	}
+
+	@Test
+	public void updateBookTest() {
+		
+		Book book=bookService.getBookById(4);
+		Double originalPrice=book.getPrice();
+		book.setPrice(book.getPrice()+100);
+		Book bookAdded= bookService.updateBook(4, book);
+		
+		Assert.assertNotEquals(originalPrice, bookAdded.getPrice());
+		
+	}
+	
+}
+
+
+junit mock testing:
+-----------------
+
+Basic concepts:
+------------
+
+Unit testing:
+------------
+	where any given test covers the smallest unit of a program (a function or procedure).
+	 It may or may not take some input parameters and may or may not return some values.
+
+Integration testing:
+--------------
+	 where individual units are tested together to check whether all the
+	 units interact with each other as expected.
+
+
+
+Integration testing example:
+----------------------------
+
+@ContextConfiguration(locations = "classpath:model-config.xml")
+@RunWith(SpringJUnit4ClassRunner.class)// SpringRunner.class
+public class BookDaoImplTest {
+
+	@Autowired
+	private BookService bookService;
+
+	@Test
+	@Transactional
+	@Rollback(false)
+	public void testAddDepartment() {
+		Book book=new Book("QW12", "spring", "ekta", new Date(), 500);
+		bookService.addBook(book);
+		System.out.println(bookService.getAllBooks().size());
+	}
+
+}
+
+
+
+
+
+What is Mocking and When Does It Come into the Picture?
+-------------------------------------------------------
+	What if we want to test service layer without completion of dao layer?
+	What if we want to test one service which depend on an service available on other application?
+
+	
+	=> mockito used for mocking
+
+getting started:
+------------------
+
+maven dependencies:
+--------------------
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.10.19</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+
+
+Why mockito?
+-----------
+
+
+public interface BookDao {
+	public List<String> getBooks();
+}
+
+
+public class BookDaoImpl implements BookDao {
+	@Override
+	public List<String> getBooks() {
+		return Arrays.asList("java","rich dad poor dad","java adv");
+	}
+}
+
+
+public interface BookService {
+	public List<String> getBooks(String subject);
+}
+
+
+
+public class BookServiceImpl implements BookService {
+	private BookDao bookDao;
+
+	public void setBookDao(BookDao bookDao) {
+		this.bookDao = bookDao;
+	}
+
+	@Override
+	public List<String> getBooks(String subject) {
+		return bookDao.getBooks().stream().filter(title -> title.contains(subject)).collect(Collectors.toList());
+	}
+
+}
+
+
+
+
+
+import org.junit.Assert; 
+
+
+public class DemoTest {
+
+	@Test
+	public void getBookTest() {
+		BookDao dao=new BookDaoImpl();
+		
+		BookServiceImpl bookService=new BookServiceImpl();
+		bookService.setBookDao(dao);
+		List<String> books=bookService.getBooks("java");
+		Assert.assertEquals(2, books.size());
+	}
+}
+
+
+
+
+
+
+Useful Snippets and References
+Easier Static Imports
+
+Window > Preferences > Java > Editor > Content Assist > Favorites
+
+org.junit.Assert
+org.mockito.BDDMockito
+org.mockito.Mockito
+org.hamcrest.Matchers
+org.hamcrest.CoreMatchers
+
+
+mockito hello world:
+----------------------
+
+public class DemoTest {
+
+	@Test
+	public void getBookTest() {
+		
+		BookDao dao=mock(BookDao.class);
+		
+		List<String> allbooks=Arrays.asList("java","rich dad poor dad","java adv");
+		
+		when(dao.getBooks()).thenReturn(allbooks);
+		
+		BookServiceImpl bookService=new BookServiceImpl();
+		bookService.setBookDao(dao);
+		List<String> books=bookService.getBooks("java");
+		Assert.assertEquals(2, books.size());
+	}
+}
+
+
+Improvement 1:
+--------------
+
+public class DemoTest2 {
+
+	BookDao dao = mock(BookDao.class);
+	
+	BookServiceImpl bookService = new BookServiceImpl();
+
+	@Before
+	public void before() {
+		List<String> allbooks = Arrays.asList("java", "rich dad poor dad", "java adv");
+
+		when(dao.getBooks()).thenReturn(allbooks);
+		BookDao dao = mock(BookDao.class);
+	}
+
+	@Test
+	public void getBookTest() {
+
+		bookService.setBookDao(dao);
+		List<String> books = bookService.getBooks("java");
+		Assert.assertEquals(2, books.size());
+	}
+}
+
+
+
+mockito with annotations:
+----------------------
+
+@RunWith(MockitoJUnitRunner.class)
+public class DemoTest2 {
+
+	@InjectMocks
+	BookServiceImpl bookService = new BookServiceImpl(); //even we dont need to create object
+
+	
+	@Mock
+	BookDao dao;
+	
+
+	@Before
+	public void before() {
+		List<String> allbooks = Arrays.asList("java", "rich dad poor dad", "java adv");
+
+		when(dao.getBooks()).thenReturn(allbooks);
+		
+	}
+
+	@Test
+	public void getBookTest() {
+
+		bookService.setBookDao(dao);
+		List<String> books = bookService.getBooks("java");
+		Assert.assertEquals(2, books.size());
+	}
+}
+
+Partial Mocking: @Spy
+--------------------
+  When we want an object in the test class to mock some method(s),
+ but also call some actual method(s), then we need partial mocking. 
+  This is achieved via @Spy
+
+	Unlike using @Mock, with @Spy, a real object is created, 
+	but the methods of that object can be mocked or can be actually called—whatever we need.
+
+
+
+
+
+
+
+Example:
+--------
+@Repository
+public class BookDaoImpl implements BookDao {
+	@Override
+	public List<String> getBooks() {
+		log();
+		return null;
+	}
+
+	public void log() {
+		System.out.println("----------");
+	}
+}
+
+
+
+@RunWith(MockitoJUnitRunner.class)
+public class DemoTest {
+
+	@Spy
+	BookDaoImpl dao;
+	
+	@InjectMocks
+	BookServiceImpl bookService;
+
+	// when tested log() method is going to be called.....
+
+}
+
+
+A few mockito examples mocking List class
+-----------------------------------------
+
+public class ListTest {
+
+	@Test
+	public void letsMockListSize() {
+		List list = mock(List.class);
+		Mockito.when(list.size()).thenReturn(10);
+		assertEquals(10, list.size());
+	}
+
+	@Test
+	public void letsMockListSizeWithMultipleReturnValues() {
+		List list = mock(List.class);
+		Mockito.when(list.size()).thenReturn(10).thenReturn(20);
+		assertEquals(10, list.size()); // First Call
+		assertEquals(20, list.size()); // Second Call
+	}
+
+	@Test
+	public void letsMockListGet() {
+		List<String> list = mock(List.class);
+		Mockito.when(list.get(0)).thenReturn("javatraining");
+		assertEquals("javatraining", list.get(0));
+		assertNull(list.get(1));
+	}
+
+	@Test
+	public void letsMockListGetWithAny() {
+		List<String> list = mock(List.class);
+		Mockito.when(list.get(Mockito.anyInt())).thenReturn("javatraining");
+		// If you are using argument matchers, all arguments
+		// have to be provided by matchers.
+		assertEquals("javatraining", list.get(0));
+		assertEquals("javatraining", list.get(1));
+	}
+
+}
+
+
+hello world unit testing spring mvc controller:
+-----------------------------------
+@Controller
+public class Hello {
+	@GetMapping("/hello")
+	public String hello(ModelMap model) {
+		model.addAttribute("name", "hello world");
+		return "helloview";
+
+	}
+}
+
+
+
+
+
+public class HelloTest {
+
+	@InjectMocks
+	private Hello hello;
+
+	private MockMvc mockMvc;
+
+	@Before
+	public void setup() {
+		MockitoAnnotations.initMocks(this);
+		this.mockMvc = MockMvcBuilders.standaloneSetup(hello).build();
+	}
+
+	@Test
+	public void testCreateSignupFormInvalidUser() throws Exception {
+		this.mockMvc.perform(get("/hello")).andExpect(status().isOk());
+	}
+
+}
+
+
+
+
+https://www.toptal.com/java/unit-integration-junit-tests
+
+
+
+
+
+
+spring rest:
+--------------
+
+-------------------
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.bookapp.model.dao.Book;
+import com.bookapp.model.service.BookService;
+
+@RestController
+@RequestMapping("/api")
+public class BookControllerRest {
+
+	@Autowired
+	private BookService bookService;
+	
+	@GetMapping(path="book", produces=MediaType.APPLICATION_JSON_VALUE)
+	public List<Book> allbooks(){
+		return bookService.getAll();
+	}
+	@GetMapping(path="book/{id}",produces=MediaType.APPLICATION_JSON_VALUE )
+	public Book getBookById(@PathVariable(name="id")int id){
+		return bookService.getById(id);
+	}
+	
+	@PostMapping(path="book",produces=MediaType.APPLICATION_JSON_VALUE, 
+			consumes=MediaType.APPLICATION_JSON_VALUE )
+	public Book addBook(@RequestBody Book book){
+		return bookService.add(book);	
+	}
+	
+	@PostMapping(path="book/{id}",produces=MediaType.APPLICATION_JSON_VALUE, 
+			consumes=MediaType.APPLICATION_JSON_VALUE )
+	public Book updateBook(@PathVariable(name="id") int id,   @RequestBody Book book){
+		return  bookService.update(book);	
+		
+	}
+	
+	
+	@DeleteMapping(path="book/{id}",produces=MediaType.APPLICATION_JSON_VALUE)
+	public Book deleteBook(@PathVariable(name="id") int id){
+		return bookService.delete(id);	
+	}
+}
+
+
+

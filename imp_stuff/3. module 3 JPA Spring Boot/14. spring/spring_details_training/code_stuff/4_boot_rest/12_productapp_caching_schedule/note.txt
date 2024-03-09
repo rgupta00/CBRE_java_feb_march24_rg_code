@@ -1,0 +1,5 @@
+how to invoke
+1. run spring boot app
+
+2. go to brower
+http://localhost:8082/productapp/api/products

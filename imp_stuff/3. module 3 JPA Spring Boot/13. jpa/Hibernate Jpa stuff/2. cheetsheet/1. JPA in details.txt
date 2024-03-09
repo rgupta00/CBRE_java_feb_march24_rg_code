@@ -1,0 +1,1126 @@
+_______________________________
+      Java Persistance API
+__________________________________
+
+	1. Hello World JPA
+	2. CRUD
+	3. Primary key generation strategy
+	4. More annotations:
+	5. @SecondaryTable
+	6. Composite Primary Keys
+	7. @Enumerated
+	8. Collection of Basic Types
+	5. relationships Mapping 
+		One to many
+		one to one
+		many to many 
+
+	6. Inheritance strategies
+	7. JPQL
+	8. comparing Hibernate with JPA
+
+
+
+
+starting derby:
+------------------
+
+1. from one cmd run: startnetworkserver
+
+2. from other cmd run ij command and create database with username and password:
+
+connect 'jdbc:derby://localhost:1527/demodb;create=true;user=root;password=root';
+
+
+
+starting mysql:
+---------------
+mysql -u root -p
+
+	1. Hello World JPA
+____________________________________
+
+	Steps in JPA
+	--------------
+
+	1.Create an JPA project 
+
+	2.Create POJO annotate with annotations
+
+	public class Book {
+		private int id;
+		private String isbn;
+		private String title;
+		private String author;
+		private double price;
+	}
+
+
+
+	@Entity
+	public class Book {
+		@Id
+		@GeneratedValue(strategy = GenerationType.AUTO)
+		private int id;
+		private String isbn;
+		private String title;
+		private String author;
+		private double price;
+	}
+
+
+
+	3. updating persistance.xml
+	---------------
+
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+	<persistence-unit name="jpa" transaction-type="RESOURCE_LOCAL">
+		<class>com.demo.Book</class>
+		<properties>
+			<property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+			<property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/foo"/>
+			<property name="javax.persistence.jdbc.user" value="root"/>
+			<property name="javax.persistence.jdbc.password" value="root"/>
+			<property name="hibernate.hbm2ddl.auto" value="create"/>
+			<property name = "hibernate.show_sql" value = "true" />
+		</properties>
+	</persistence-unit>
+</persistence>
+
+
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<persistence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+	version="2.0" xmlns="http://java.sun.com/xml/ns/persistence">
+	<persistence-unit name="demo" transaction-type="RESOURCE_LOCAL">
+		<properties>
+			<property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.ClientDriver" />
+			<property name="javax.persistence.jdbc.url" value="jdbc:derby://localhost:1527/demodb" />
+			<property name="javax.persistence.jdbc.user" value="root" />
+			<property name="javax.persistence.jdbc.password" value="root" />
+			<property name="hibernate.hbm2ddl.auto" value="create"/>
+			<property name = "hibernate.show_sql" value = "true" />
+		</properties>
+	</persistence-unit>
+</persistence>
+
+
+
+
+
+
+
+	saving
+	--------
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory("jpa");
+
+		EntityManager em = emf.createEntityManager();
+
+		Book book=new Book("123A", "head first", "katty", 370.5);
+
+		EntityTransaction tx = em.getTransaction();
+
+		try {
+			tx.begin();
+
+			em.persist(book);
+
+			tx.commit();
+			System.out.println("book is saved...");
+		} catch (PersistenceException ex) {
+			if (tx != null)
+				tx.rollback();
+		}
+
+		em.close();
+		emf.close();
+
+
+
+
+	finding a book
+	 ------------------------
+	get vs load (hiberante )
+	find	vs getReference()
+
+
+		Book book=em.find(Book.class, 1);
+
+
+
+	updating:
+	----------
+		//code to update a book
+		em.getTransaction().begin();
+		
+		Book book=em.find(Book.class, 1);
+		book.setAuthor("amit");
+
+		em.merge(book);
+
+		em.getTransaction().commit();
+		
+		em.close();
+		emf.close();
+
+
+
+	geetting list of all books:
+	------------------------
+		select b from Book b;
+		select b from Book as b;
+		from Book;
+
+
+		List<Book> allBooks=em.createQuery("from Book").getResultList();
+		for(Book b: allBooks)
+			System.out.println(b.getTitle());
+
+
+	deleting:
+	-----------
+
+		em.getTransaction().begin();
+		
+		Book book=em.find(Book.class, 1);
+		em.remove(book);
+		em.getTransaction().commit();
+
+
+
+
+
+____________________________________
+
+	2. CURD application:
+____________________________________
+
+
+	public interface BookDao {
+		public List<Book> getAllBooks();
+		public Book getBookById(int bookId);
+		public Book addBook(Book book);
+		public Book updateBook(Book book);
+		public Book removeBook(int bookId);
+	}
+
+
+	
+	
+public class BookDaoImp implements BookDao {
+
+	private EntityManagerFactory emf;
+	
+	
+	public BookDaoImp(EntityManagerFactory emf) {
+		this.emf = emf;
+	}
+
+	@Override
+	public List<Book> getAllBooks() {
+		EntityManager em=emf.createEntityManager();
+		List<Book> allBooks=em.createQuery("from Book").getResultList();
+		return allBooks;
+	}
+
+	@Override
+	public Book getBookById(int bookId) {
+		EntityManager em=emf.createEntityManager();
+		Book book=em.find(Book.class, bookId);
+		return book;
+	}
+
+	@Override
+	public Book addBook(Book book) {
+		EntityManager em=emf.createEntityManager();
+		em.getTransaction().begin();
+		em.persist(book);
+		em.flush();
+		em.getTransaction().commit();
+		em.close();
+		return book;
+	}
+
+	@Override
+	public Book updateBook(Book book) {
+		return null;
+	}
+
+	@Override
+	public Book removeBook(int bookId) {
+		return null;
+	}
+
+}
+
+
+SCL
+-----
+EntityManagerFactory emf=Persistence.
+				createEntityManagerFactory("foo");
+
+doGet(...,...){
+	
+
+}
+
+
+
+
+_____________________________________
+
+3. Primary key genearation strategy
+_______________________________________
+
+
+
+	@GeneratedValue(strategy=
+				AUTO (By default :let hibernate make decision)
+
+				Identity (Hibernate use identity column)
+
+				Sequence
+
+				Table
+
+
+
+	Example table generation strategy
+	------------------------------------------
+
+
+	@Id
+	@TableGenerator	(name="bookst",table="bookktable",pkColumnName="bookkey",
+			pkColumnValue="bookvalue",allocationSize=1)
+
+	@GeneratedValue(strategy=GenerationType.TABLE,generator="bookst")
+	@Column(name="book_id")
+
+
+
+
+
+
+
+
+
+
+______________________________________________________________
+
+4. More annoations @Basic, @Transient @Temporal @Table @Column @Lob etc...
+______________________________________________________________
+
+
+
+Consider:
+
+
+	@Entity
+	public class Book {
+		@Id
+		@GeneratedValue(strategy = GenerationType.AUTO)
+		private int id;
+		private String isbn;
+		private String title;
+		private String author;
+		private double price;
+	}
+
+
+
+	What if table name and field name is something else?
+	----------------------------------------------------
+
+
+
+	@Entity(name="book-entity")
+	@Table(name="book-table")
+	public class Book {
+		@Id
+		@GeneratedValue(strategy = GenerationType.AUTO)
+		@Column(name="book_id", nullable=false)
+		private int id;
+		private String isbn;
+		@Basic
+		private String title;
+		private String author;
+		private double price;
+
+
+
+
+		Note: annotations can be applied to getters
+
+
+
+	Understanding more annotations: basics, transient, temporal, lob
+	------------------------------
+
+		@Temporal(TemporalType.DATE)
+		private Date joinedDate;  //java.util
+
+		@Transient
+		private int discount;
+
+	
+		@Basic ?:
+			used to add some properties to add to that field.
+		  	You can work apply without it.
+
+	       @Transient?
+			You can not store static and transient data.
+
+
+
+
+
+______________________________________________________________
+5. @SecondaryTable
+______________________________________________________________
+
+
+
+@Entity
+public class Address {
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private int id;
+	private String addressLine1;
+	private String addressLine2;
+	
+	private String city;
+	private String state;
+	private String pin;
+	
+	private String country;
+
+
+What is requirment ?
+
+
+
+@Entity
+public class Address {
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private int id;
+
+	//SHOULD MAP TO ADDRESS TABLE
+	private String addressLine1;
+	private String addressLine2;
+	
+	//SHOULD MAP TO CITY TABLE
+	private String city;
+	private String state;
+	private String pin;
+	
+	//SHOULD MAP TO COUNTRY TABLE
+	private String country;
+
+
+
+
+Using @SecondaryTable annotation:
+----------------------------------
+
+	@Entity
+	@SecondaryTables({
+		@SecondaryTable(name="city"),
+		@SecondaryTable(name="country")
+	})
+	public class Address {
+		@Id
+		@GeneratedValue(strategy=GenerationType.AUTO)
+		private int id;
+		private String addressLine1;
+		private String addressLine2;
+		
+		@Column(table="city")
+		private String city;
+		@Column(table="city")
+		private String state;
+		@Column(table="city")
+		private String pin;
+		
+		@Column(table="country")
+		private String country;
+
+
+
+___________________________________________________________________
+6. Composite Primary Keys
+___________________________________________________________________
+
+
+@Embeddable
+public class NewsId {
+	private String title;
+	private String language;
+	
+}
+
+@Entity
+public class News {
+
+	@EmbeddedId
+	private NewsId id;
+	private String content;
+	
+}
+
+
+
+
+
+___________________
+7.@Enumerated
+__________________
+
+
+
+@Entity
+public class Book {
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private int id;
+	private String isbn;
+	private String title;
+	private String author;
+	private double price;
+	
+	@Enumerated(EnumType.STRING)
+	private BookType bookType;
+
+	enum BookType {
+		PHYSICS, CHEM, MATHS
+	}
+
+
+
+
+
+______________________________
+8. Collection of Basic Types
+_____________________________
+
+One book have many reviews ( of string data type)
+
+
+
+@Entity
+public class Book {
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private int id;
+	private String isbn;
+	private String title;
+	private String author;
+	private double price;
+	
+	@ElementCollection(fetch=FetchType.LAZY)
+	@CollectionTable(name="book_reviews")
+	@Column(name="review")
+	private List<String> reviews=new ArrayList<String>();
+	
+
+
+
+
+
+___________________________________________________________________
+6. Mapping relationships: many to one, one to one, many to many etc
+___________________________________________________________________
+
+
+
+	Many-To-One Mapping
+	______________________
+
+	Consider:-
+
+	target <------------------- source
+	
+
+		1			N
+	Department ------<>---------Employee
+
+	  
+
+	What is the ERD rule: put PK from 1 side to N side
+
+	ie Put PK of Department going to put as FK in Employee table
+
+
+	So that Employee is source entity and Department is target entities.
+
+
+
+
+	@Entity
+	public class Employee {
+
+		@Id
+		@GeneratedValue
+		private int empId;
+		private String empName;
+
+		@ManyToOne
+		private Department department;
+
+
+
+	@Entity
+	public class Department {
+		@Id
+		@GeneratedValue
+		private int deptId;
+		private String detpName;
+	
+		@OneToMany(mappedBy="department")
+		private Collection<Employee>employees=new ArrayList<Employee>();
+	
+
+
+	Now controlling more to it
+	------------------------------------
+	The PK of Department is put as FK in employee table with 
+	
+	strange name of department_deptId
+
+	I want to have some other name
+	-----------------------------
+		deptId_fk  what to do?
+
+
+
+
+	@Entity
+	public class Employee {
+
+		@Id
+		@GeneratedValue
+		private int empId;
+		private String empName;
+
+		@ManyToOne
+		@JoinColumn(name="deptId_fk")
+		private Department department;
+
+
+
+
+
+
+	one-to-one mapping
+	______________________
+
+	In a one-to-one mapping the owner can be
+	 either the source entity or the target entity.
+
+
+				1		1
+			Employee<>----------Parking
+
+
+
+
+
+	public class Parking {
+	
+		private int partingId;
+		private String parkingLocation;
+
+	
+		private Employee employee;
+
+
+
+	
+	public class Employee {
+	
+		private int empId;
+		private String empName;
+
+	
+		private Parking parking;
+
+
+
+
+
+
+	Now apply annotations
+	---------------------------------
+
+
+
+	@Entity
+	public class Parking {
+		@Id
+		@GeneratedValue
+		private int partingId;
+		private String parkingLocation;
+
+		@OneToOne(mappedBy = "parking")
+		private Employee employee;
+
+
+
+	@Entity
+	public class Employee {
+		@Id
+		@GeneratedValue
+		private int empId;
+		private String empName;
+
+		@OneToOne
+		private Parking parking;
+
+
+
+
+
+
+
+	Many-to-Many mapping
+	______________________
+
+
+	   N		      N
+	Employee----<>----- Project
+
+
+
+
+	Create POJO
+	-------------
+
+	public class Employee {
+	
+		private int empId;
+		private String empName;
+	
+		private Collection<Project> projects = new ArrayList<Project>();
+
+
+
+
+
+	public class Project {
+	
+		private int projectId;
+		private String projectName;
+
+		private Collection<Employee> employees = new ArrayList<Employee>();
+
+
+
+
+
+
+
+
+
+	Apply annotations
+	----------------
+	@Entity
+	public class Employee {
+		@Id
+		@GeneratedValue
+		private int empId;
+		private String empName;
+
+		@ManyToMany
+		private Collection<Project> projects = new ArrayList<Project>();
+
+
+
+
+	@Entity
+	public class Project {
+		@Id
+		@GeneratedValue
+		private int projectId;
+		private String projectName;
+
+		@ManyToMany(mappedBy="projects")
+		private Collection<Employee> employees = new ArrayList<Employee>();
+
+
+
+	Note:
+	----------
+
+	3 tables is going to be created:
+
+		Employee 
+
+		Project 
+
+		employee_project (join table)
+		--------------------------
+			employees_empId
+			projects_projectId
+
+
+		Want more control:
+
+
+
+
+	@Entity
+	public class Employee {
+		@Id
+		@GeneratedValue
+		private int empId;
+		private String empName;
+
+		@ManyToMany
+		@JoinTable(name="emp_project", joinColumns={@JoinColumn(name="e_id" , referencedColumnName="empId")},
+			inverseJoinColumns={
+				@JoinColumn(name="proj_d", referencedColumnName="projectId")})
+	
+		private Collection<Project> projects = new ArrayList<Project>();
+
+
+
+
+
+
+
+
+
+
+
+
+Some more exampels:
+
+
+
+
+
+One to one
+-----------
+	Unidirectional:
+		1		1
+	Employee -------------> Parking
+
+	@Entity
+	class Employee {
+
+	@Id
+	private int id;
+
+	private Parking parking;
+
+	......
+	......
+
+	@OneToOne(cascade={CascadeType=PERSIST})
+	public Parking getParking{
+
+	}
+
+
+	}
+
+
+	@Entity
+	class Parking{
+
+	}
+
+
+Cascade type:
+-------------
+	CascadeType.ALL	cascade all operations
+		MERGE
+		PERSIST
+		REFRESH
+		REMOVE
+
+
+
+
+
+One to Many
+-----------
+	Unidirectional:
+
+	
+		1		N
+	Company -------------> Employee
+
+
+	@Entity
+	class Company{
+
+		private int id;
+
+		private Collection<Employee> employees;
+
+		.....
+		........
+		@OneToMany(Cascade={CascadeType.ALL}, fetch=FechType.EAGER)
+		public Collection <Employee> getEmployees(){
+
+		}
+
+	}
+
+	@Entity
+	class Employee{
+
+
+
+	}
+
+
+Many to One
+-----------
+	Unidirectional:
+
+
+	
+		1		N
+	Employee -------------> BusinessAddress
+
+
+	@Entity
+	class Employee{
+
+	@Id
+	private int id;
+
+	.....
+	private BusinessAddress businessAddress;
+
+	@ManyToOne(Cascade={CascadeType.ALL})
+	//apply on getter
+
+	}
+
+
+	@Entity
+	class BusinessAddress{
+
+	@Id
+	private int id;
+	}
+
+
+
+Many to Many
+-----------
+	Unidirectional:
+
+	Book <---------------> Author
+
+	3 tables;
+	----------
+
+	Book ----Book_Author------- Author
+
+
+
+	@Entity
+	class Book{
+
+	@Id
+	private int id;
+	private String bookName;
+
+	private Collection<Author> authors=new ArrayList<Author>();
+
+	@ManyToMany(Cascade={CasCadeType.ALL}, fetch=FetchType.Eager)
+	@JoinTable(name="Book_Author")
+
+	public Collection<Author>getAuthors(){
+	}
+	}
+
+
+	@Entity
+	class Author{
+
+	@Id
+	private int id;
+	private String authorName;
+
+	private Collection<Book> books=new ArrayList<Book>();
+
+	}
+
+	Now:
+	------
+
+	Author a1=new Author();
+	...... a2=.........
+
+	Book b1=new Book();
+	... b2=...........
+
+	b1.getAuthors().add(a1);
+	b1.getAuthors().add(a2);
+
+
+	.......
+	em.persist(a1);
+	em.persist(a2);
+
+
+	for(Book b: ba.getAllBooks){
+
+		Sysout(b.getBookName());
+
+		for(AUthor temp:b.getAuthors())	
+			Sysout(temp.getAuthorName());
+	
+
+	}
+
+
+Understandign JPQUL
+--------------------
+
+	Extended version of EJB QueryLanguage
+
+	Operate on classes and Object (entities ) in java workspace
+	while SQl works on row/column in DB space
+
+	JPQL statement can be extended only after they converted to 
+	SQL
+
+	JPQL --------> JPQL ------------------> SQL
+		   Query Processor		Quaries
+
+
+	Ex:
+
+	Select e.employeeName form Employee e;
+
+
+	
+Query API
+-----------
+
+	Allow to create custom quaries to access a single or a collection
+	of entities from the database
+
+	Dynamic Quaries
+	--------------
+	Query q=em.createQuery("select e from Employee e");
+
+
+	Named Query
+	-----------
+	Enhanced performance of execution of code
+	
+	Improve maintanance / reusability of code
+
+	created / stored by using meta data annotaitons
+
+	@Entiy
+	@NamedQuery(name="findAllEmployees" query="select e from Employee e where e.employeeName LIKE : employeeName")
+
+
+	public class Employee {
+
+
+
+
+	}
+
+
+	
+	Query 	q=em.createNamedQuery("findAllEmployees");
+		q.setParameter("employeeName",'raja');
+
+		paginations
+		----------
+		q.setMaxResult(10);
+		q.setFirstResult(3);
+
+		List emp=q.getResultList();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Follow these simple steps to setup Database Connection Pooling inside Tomcat 6.x
+
+Step 1
+
+Add following element to conf/context.xml file. This Resource will be avaible to all Applications deployed
+
+<Resource name="jdbc/SampleDb" auth="Container" type="javax.sql.DataSource"
+maxActive="50" maxIdle="3" maxWait="10000"
+username="" password=""
+driverClassName=""
+url=""/>
+
+provide values for all attributes (username, password, driverClassName, url etc)
+
+Step 2
+Add following to web.xml of your Application
+
+<resource-ref>
+<description>DB Connection</description>
+<res-ref-name>jdbc/SampleDB</res-ref-name>
+<res-type>javax.sql.DataSource</res-type>
+<res-auth>Container</res-auth>
+</resource-ref>
+
+Step 3
+Refer JNDI Data source inside your persistence.xml
+
+If you want to use JTA use this configuration
+
+<persistence-unit name="SamplePU" transaction-type="JTA">
+<jta-data-source>java:/comp/env/jdbc/SampleDB</jta-data-source>
+..
+</persistence-unit>
+
+and for non JTA
+<persistence-unit name="SamplePU" transaction-type="RESOURCE_LOCAL">
+<non-jta-data-source>java:/comp/env/jdbc/SampleDB</non-jta-data-source>
+..
+</persistence-unit>
+
+
+
+
+
+	<dependency>
+		<groupId>org.apache.derby</groupId>
+		<artifactId>derbyclient</artifactId>
+		<version>10.11.1.1</version>
+	</dependency>
+        <dependency>
+            <groupId>org.hibernate.javax.persistence</groupId>
+            <artifactId>hibernate-jpa-2.0-api</artifactId>
+            <version>1.0.1.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <version>4.0.1.Final</version>
+        </dependency>
+
+

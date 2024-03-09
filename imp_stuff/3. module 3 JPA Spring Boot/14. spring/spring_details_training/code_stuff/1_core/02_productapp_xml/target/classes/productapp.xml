@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- setter injection -->
+	<!-- <bean id="productService" class="com.productapp.service.ProductServiceImpl">
+		<property name="productDao" ref="productDao"/>
+	</bean>
+	<bean id="productDao" class="com.productapp.dao.ProductDaoMapImpl"/> -->
+	
+	<!-- ctr injection -->
+<!-- 	<bean id="productService" class="com.productapp.service.ProductServiceImpl">
+		<constructor-arg name="productDao" ref="productDao"/>
+	</bean>
+	<bean id="productDao" class="com.productapp.dao.ProductDaoMapImpl"/> -->
+	
+	<!-- c namespace -->
+	<!-- <bean id="productService" class="com.productapp.service.ProductServiceImpl" c:productDao-ref="productDao"/>
+	<bean id="productDao" class="com.productapp.dao.ProductDaoMapImpl"/>
+	 -->
+	<!-- p namespace -->
+	<!-- <bean id="productService" class="com.productapp.service.ProductServiceImpl" p:productDao-ref="productDao"/>
+	<bean id="productDao" class="com.productapp.dao.ProductDaoMapImpl"/> -->
+
+	
+	<!-- bean scope -->
+	
+	<!-- autowiring -->
+	<!-- <bean id="productService" class="com.productapp.service.ProductServiceImpl"  autowire="byType"/>
+	<bean id="productDaoV1" class="com.productapp.dao.ProductDaoMapImpl" primary="true"/>
+	<bean id="productDaoV2" class="com.productapp.dao.ProductDaoJdbcImpl"/> -->
+	
+	
+</beans>

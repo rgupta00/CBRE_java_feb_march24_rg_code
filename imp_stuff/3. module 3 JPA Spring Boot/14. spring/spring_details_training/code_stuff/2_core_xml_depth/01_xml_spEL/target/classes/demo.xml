@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+	<bean id="productStore" class="com.demo.ProductStore">
+		<property name="products" value="#{productCollection.products}"/>
+		<property name="productStoreName" value="best store"/>
+		<property name="firstProduct" value="#{productCollection.getFirstProduct()}"/>
+	</bean>
+
+
+	<bean id="productCollection" class="com.demo.ProductCollection">
+		<property name="products">
+			<list>
+				<ref bean="p1"/>
+				<ref bean="p2"/>
+			</list>
+		</property>
+	</bean>
+	<bean id="p1" class="com.demo.Product">
+		<property name="id" value="12" />
+		<property name="name" value="laptop" />
+		<property name="price" value="780000" />
+		<property name="available" value="true" />
+	</bean>
+
+	<bean id="p2" class="com.demo.Product">
+		<property name="id" value="192" />
+		<property name="name" value="keyboard" />
+		<property name="price" value="980" />
+		<property name="available" value="false" />
+	</bean>
+	
+</beans>

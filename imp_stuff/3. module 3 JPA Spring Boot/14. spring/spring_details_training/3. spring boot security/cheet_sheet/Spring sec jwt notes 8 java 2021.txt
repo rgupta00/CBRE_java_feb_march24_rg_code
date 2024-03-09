@@ -1,0 +1,278 @@
+Spring security jwt:
+------------------
+configure hello world security:
+------------------
+
+
+@RestController
+public class Hello {
+	@GetMapping(path = "/hello")
+	public String hello() {
+		return "hello world";
+	}
+}
+
+
+
+
+
+@EnableWebSecurity
+public class SecurityConfigurer extends WebSecurityConfigurerAdapter{
+
+	@Autowired
+	private UserDetailsService userDetailsService;
+	
+	
+	
+	@Override
+	protected void configure(AuthenticationManagerBuilder auth)throws Exception {
+		auth.userDetailsService(userDetailsService);
+	}
+	@Bean
+	public PasswordEncoder getPasswordEncoder(){
+		return NoOpPasswordEncoder.getInstance();
+	}
+
+
+
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.csrf().disable()
+		.authorizeRequests().antMatchers("/authenticate").permitAll()
+		.anyRequest().authenticated();
+	}
+	
+}
+
+
+
+@Service
+public class DetailService implements UserDetailsService{
+	@Override
+	public UserDetails loadUserByUsername(String username)throws UsernameNotFoundException {
+		return new User("raj", "raj", AuthorityUtils.createAuthorityList("ADMIN","MGR"));
+	}
+
+}
+
+
+Now configure jwt:
+-----------------
+
+
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt</artifactId>
+			<version>0.9.1</version>
+		</dependency>
+
+
+@Service
+public class JwtUtil {
+
+    private String SECRET_KEY = "secret";
+
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
+    }
+
+    private Boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    public String generateToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        return createToken(claims, userDetails.getUsername());
+    }
+
+    private String createToken(Map<String, Object> claims, String subject) {
+
+        return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 1))
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
+    }
+
+    public Boolean validateToken(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+}
+
+
+
+
+now we need to create /authenticate api end point so that user can authenticate and get token:
+------------------------------------------
+
+
+public class AuthRequest {
+	private String username;
+	private String password;
+}
+
+
+public class AuthResponse {
+	private String jwtToken;
+}
+
+
+
+
+
+update controller:
+--------------------
+
+
+	@Autowired
+	private AuthenticationManager authManager;
+	
+	@Autowired
+	private UserDetailsService userDetailsService;
+	
+	@Autowired
+	private JwtUtil jwtUtil;
+	
+	@PostMapping(path = "/authenticate")
+	public ResponseEntity<AuthResponse> createAuthToken(@RequestBody AuthRequest authRequest) throws Exception {
+		try{
+		authManager.authenticate(
+				new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+	
+			);
+		}catch(BadCredentialsException ex){
+			System.out.println("---------------------------");
+			throw new Exception("user name is invalid", ex);
+		}
+		
+		UserDetails userDetails=userDetailsService.loadUserByUsername(authRequest.getUsername());
+		
+		final String jwtToken=jwtUtil.generateToken(userDetails);
+		
+		return ResponseEntity.ok().body(new AuthResponse(jwtToken));
+	}
+	
+
+
+
+
+configure auth mgr bean:
+-------------------------
+
+	@Override
+	@Bean
+	public AuthenticationManager authenticationManagerBean() throws Exception {
+		return super.authenticationManagerBean();
+	}
+
+
+
+Now request for authenticate endpoint and pass json for user
+---------------------------------
+
+
+http://localhost:8080/authenticate
+
+
+{
+    "username":"raj",
+    "password":"raj"
+}
+
+we well get jwt token:
+{
+    "jwtToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyYWoiLCJleHAiOjE2MDQxNjA3NjEsImlhdCI6MTYwNDE1NzE2MX0.yNFMTeosbspkOx_hzoe0vJ0wAaQsr6WRfHdyiIFfxYQ"
+}
+
+
+
+
+Now next step is to intercept all request:
+------------------------------------
+	-extract jwt token from the request
+	-validate and set in execution context
+
+
+we need to configure filter to run for every request , and examin for jwt
+------------------------------------------------------------------------
+
+OncePerRequestFilter: means it should execute on every req in my app
+
+@Component
+public class JwtRequestFilter extends OncePerRequestFilter{
+
+	@Autowired
+	private UserDetailsService userDetailsService;
+
+	@Autowired
+	private JwtUtil jwtUtil;
+
+	@Override
+	protected void doFilterInternal(HttpServletRequest request,HttpServletResponse response,
+			FilterChain filterChain)throws ServletException, IOException {
+		final String authHeader=request.getHeader("Authorization");
+		String jwt=null;
+		String username=null;
+		//it must contain Bearer and and valid jwt token for authorization
+		if(authHeader!=null && authHeader.startsWith("Bearer ")){
+			jwt=authHeader.substring(7);
+			username=jwtUtil.extractUsername(jwt);
+		}
+		//now extract userDetails related to username
+		if(username!=null && SecurityContextHolder.getContext().getAuthentication()==null){
+			UserDetails userDetails=this.userDetailsService.loadUserByUsername(username);
+			if(jwtUtil.validateToken(jwt, userDetails)){
+				UsernamePasswordAuthenticationToken
+				authenticationToken=new UsernamePasswordAuthenticationToken(userDetails, 
+						null, userDetails.getAuthorities());
+				authenticationToken.setDetails(new WebAuthenticationDetails(request));
+				SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+			}
+		}
+		filterChain.doFilter(request, response);
+	}
+}
+
+
+
+configure spring security to use this filter:
+------------------------------------------
+
+@Autowired
+	JwtRequestFilter jwtRequestFilter;
+
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.csrf().disable()
+		.authorizeRequests().antMatchers("/authenticate").permitAll()
+		.anyRequest().authenticated()
+		.and().sessionManagement()
+		.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+		http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+	}
+
+
+
+
+Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyYWoiLCJleHAiOjE2MTA0MzU4MDUsImlhdCI6MTYxMDQzMjIwNX0.U7FnAo91_o6HwLMvIupYwymnbpzyCAwrtjAtQw1VHz0
+
+
+
+
+
+
+
+
+
+

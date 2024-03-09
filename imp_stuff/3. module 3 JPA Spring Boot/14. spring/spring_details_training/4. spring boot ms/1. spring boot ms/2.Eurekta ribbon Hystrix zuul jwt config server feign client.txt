@@ -1,0 +1,1854 @@
+Microservices Architecture?
+_________________________
+
+	=> Microservices architecture allows to avoid monolith application for 
+	large system. 
+
+	=> It provide loose coupling between collaborating processes which running
+	 independently in different environments with tight cohesion.
+
+Adv MS?	:)
+____________
+
+	=> Smaller code base is easy to maintain.
+	=> Easy to scale as individual component.
+	=> Technology diversity i.e. we can mix libraries, databases, frameworks etc.
+	=> Fault isolation i.e. a process failure should not bring whole system down.
+	=> Better support for smaller and parallel team.
+	=> Independent deployment
+	=> Deployment time reduce
+
+Microservices Challenges	:(
+______________________
+
+	=> Difficult to achieve strong consistency across services
+	=> ACID transactions do not span multiple processes.
+	=> Distributed System so hard to debug and trace the issues
+	=> Greater need for end to end testing
+	=> Required cultural changes in across teams like Dev and Ops
+
+What is Spring Cloud?
+___________________
+	=> building blocks for Cloud and Microservices
+	=> provides microservices infrastructure like provide use services
+		 such as Service Discovery, Configuration server and Monitoring.
+	=>  provides several other open source projects like Netflix OSS.
+	=>  provides PaaS like Cloud Foundry, AWS and Heroku.
+	=>  uses Spring Boot style starters
+
+
+Various modules?
+__________________
+	=>  Cloud Integration
+	=>  Dynamic Reconfiguration
+	=>  Service Discovery
+	=> Client side Load Balancing 
+	......
+
+
+
+Service Discovery 
+_________________
+	How do services find each other?
+	What happens if we run multiple instances for a service
+	AKA yellow pages*
+
+	Eureka created by Netflix
+
+
+
+Client-side Load Balancing
+_________________________
+
+	Each service typically deployed as multiple instances for 
+	fault tolerance and load sharing. 
+
+	But there is problem how to decide which instance to use?
+
+	How do we decide which service instance to use?
+
+	 Netflix Ribbon, 
+
+	it provide several algorithm for Client-Side Load Balancing. 
+	Spring provide smart RestTemplate for service discovery and load balancing by using 		
+	@LoadBalanced annotation with RestTemplate instance.
+
+
+
+
+Steps:
+__________
+	1. Creating Discovery Service (Creating Eureka Discovery Service)
+
+	2. Creating MicroService (the Producer)
+	    Register itself with Discovery Service with logical service.
+
+	3. Create Microservice Consumers find Service registered with Discovery Service
+
+	4. Discovery client using a smart RestTemplate to find microservice.
+
+
+
+
+server.port=8080
+server.servlet.context-path=/orderapp
+spring.application.name=order-service
+
+
+Product store application : microservice
+______________________
+coupon	: 8085
+customer: 8081
+product :8082
+order : 8080
+
+class Customer{
+	private int id;
+	private String name;
+	private String email;
+}
+
+class Product {
+	private int id;
+	private String name;
+	private double price;
+}
+
+
+ class Coupon {
+	private int id;
+	private String couponCode;
+	private int discountPercentage;
+	private Date expiredOn;
+}
+
+
+public class Order {
+	private int id;
+	private double totalPrice;
+	private Date orderDate;
+	private Customer customer;
+	private Product product;
+
+}
+
+public class OrderRequest {
+	private int productId;
+	private int customerId;
+	private String couponCode;
+	private int qty;
+}
+
+
+Product module:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+server.port=8082
+server.servlet.context-path=/productapp
+spring.application.name=product-service
+
+
+Dao layer:
+____________
+
+@Data
+@Entity
+@Table(name = "product_table")
+@NoArgsConstructor
+public class Product {
+
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+	private String name;
+	private double price;
+}
+
+@Repository
+public interface ProductRepo extends JpaRepository<Product, Integer>{
+}
+
+
+Service layer:
+____________
+public interface ProductService {
+	public List<Product> getAllProduct();
+	public Product addProduct(Product customer);
+	public Product getProductById(int id)	
+}
+
+
+@Service
+@Transactional
+public class ProductServiceImpl implements ProductService {
+
+	@Autowired
+	private ProductRepo productRepo;
+	
+	@Override
+	public List<Product> getAllProduct() {
+		return productRepo.findAll();
+	}
+
+	@Override
+	public Product addProduct(Product product) {
+		productRepo.save(product);
+		return product;
+	}
+
+	@Override
+	public Product getProductById(int id) {
+		return productRepo.findById(id).orElseThrow(ProductNotFoundException::new );
+	}
+
+}
+
+
+public class ProductNotFoundException extends RuntimeException{
+}
+
+
+@RestController
+public class ProductController {
+
+	@Autowired
+	private ProductService productService;
+	
+	@GetMapping(path = "product")
+	public List<Product> getAll(){
+		return productService.getAllProduct();
+	}
+	
+	@GetMapping(path = "product/{id}")
+	public Product getAnProduct(@PathVariable(name = "id") int id){
+		return productService.getProductById(id);
+	}
+}
+
+
+Add 2 product with command line runner:
+________________________________________
+productService.addProduct(new Product("HP laptop", 60000));
+productService.addProduct(new Product("LG TV", 70000));
+
+
+
+
+
+
+
+
+customer module:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+server.port=8081
+server.servlet.context-path=/custmerapp
+spring.application.name=customer-service
+
+
+
+
+Dao layer :
+_____________
+
+@Entity
+@Table(name = "cust_table")
+@NoArgsConstructor
+public class Customer {
+
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+	private String name;
+	private String email;
+}
+
+@Repository
+public interface CustomerRepo extends JpaRepository<Customer, Integer>{
+}
+
+
+service layer :
+_____________
+
+public interface CustomerService {
+	public List<Customer> getAllCustomer();
+	public Customer addCustomer(Customer customer);
+	public Customer getCustomerById(int id);
+}
+
+@Service
+@Transactional
+public class CustomerServiceImpl implements CustomerService {
+
+	@Autowired
+	private CustomerRepo customerRepo;
+	
+	@Override
+	public List<Customer> getAllCustomer() {
+		return customerRepo.findAll();
+	}
+
+	@Override
+	public Customer addCustomer(Customer customer) {
+		 customerRepo.save(customer);
+		 return customer;
+	}
+
+	@Override
+	public Customer getCustomerById(int id) {
+		return customerRepo.findById(id).orElseThrow(CustomerNotFoundException:: new);
+	}
+
+}
+
+
+public class CustomerNotFoundException extends RuntimeException{
+}
+
+
+controller :
+_____________
+
+@RestController
+public class CustomerController {
+	
+	@Autowired
+	private CustomerService customerService;
+	
+	@GetMapping(path = "customer")
+	public List<Customer> getAll(){
+		return customerService.getAllCustomer();
+	}
+	
+	@GetMapping(path = "customer/{id}")
+	public Customer getAnCustomer(@PathVariable(name = "id") int id){
+		return customerService.getCustomerById(id);
+	}
+}
+
+
+add two customer :
+________________
+customerService.addCustomer(new Customer("raj", "raj@gmail.com"));
+customerService.addCustomer(new Customer("ekta", "ekta@gmail.com"));
+
+
+
+
+Coupon service
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+server.port=8085
+server.servlet.context-path=/couponapp
+spring.application.name=coupon-service
+
+
+@Data
+@Entity
+@Table(name = "coupon_table")
+@NoArgsConstructor
+public class Coupon {
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+	private String couponCode;
+	private int discountPercentage;
+	private Date expiredOn;
+}
+
+
+@Repository
+public interface CouponRepo extends JpaRepository<Coupon, Integer> {
+	public Coupon findByCouponCode(String couponCode);
+}
+
+
+public interface CouponService {
+	public List<Coupon> getAll();
+	public Coupon getCouponById(int id);
+	public Coupon getCouponByCouponCode(String couponCode);
+	public Coupon addCoupon(Coupon coupon);
+}
+
+@Service
+@Transactional
+public class CouponServiceImpl implements CouponService{
+
+	@Autowired
+	private CouponRepo couponRepo;
+	
+	@Override
+	public List<Coupon> getAll() {
+		return couponRepo.findAll();
+	}
+
+	@Override
+	public Coupon getCouponById(int id) {
+		return couponRepo.findById(id).orElseThrow(CouponNotFoundException:: new);
+	}
+
+	@Override
+	public Coupon addCoupon(Coupon coupon) {
+		couponRepo.save(coupon);
+		return coupon;
+	}
+
+	@Override
+	public Coupon getCouponByCouponCode(String couponCode) {
+		return couponRepo.findByCouponCode(couponCode);
+	}
+
+}
+
+public class CouponNotFoundException extends RuntimeException{
+}
+
+
+
+@RestController
+public class CouponContoller {
+	
+	@Autowired
+	private CouponService couponService;
+	
+	@GetMapping(path="coupon")
+	public List<Coupon> getAll(){
+		return couponService.getAll();
+	}
+	
+	@GetMapping(path="couponbyid/{id}")
+	public Coupon getAnCouponById(@PathVariable(name="id") int id){
+		return couponService.getCouponById(id);
+	}
+	
+	@GetMapping(path="couponbycode/{couponCode}")
+	public Coupon getAnCouponByCode(@PathVariable(name="couponCode") String couponCode){
+		return couponService.getCouponByCouponCode(couponCode);
+	}
+}
+
+
+
+
+order service
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+server.port=8080
+server.servlet.context-path=/orderapp
+spring.application.name=order-service
+
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Order {
+	private int id;
+	private double totalPrice;
+	private Date orderDate;
+	private Customer customer;
+	private Product product;
+
+}
+
+
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class OrderRequest {
+	private int cid;
+	private int pid;
+	private int quantity;
+	private String couponCode;
+}
+
+
+
+
+
+
+@RestController
+public class OrderRestController {
+
+	@Autowired
+	private RestTemplate restTemplate;
+	
+	
+	@PostMapping(path="order")
+	public ResponseEntity<Order> submitOrder(@RequestBody OrderRequest orderRequest){
+		
+		// call different rest service using rest template
+
+	String couponUrl="http://localhost:8085/coupon/api/coupon/SUP10";
+		
+		String custUrl="http://localhost:8081/customer/api/customer/"+cid;
+		System.out.println(custUrl);
+		String productUrl="http://localhost:8082/product/api/product/"+pid;
+		System.out.println(productUrl);
+		Customer customer = restTemplate.getForObject(custUrl, Customer.class,cid);
+		
+		Product product = restTemplate.getForObject(productUrl, Product.class,pid);
+		
+		Coupon coupon=restTemplate.getForObject(couponUrl, Coupon.class);	
+
+		double totalPrice= discountedPrice* orderRequest.getQuantity();
+		Order order=new Order();
+		order.setId(22);
+		order.setCustomer(customer);
+		order.setProduct(product);
+		order.setTotalPrice(totalPrice);
+		order.setOrderDate(new Date());
+		return ResponseEntity.status(HttpStatus.CREATED).body(order);
+		
+	}
+
+}
+
+Spring cloud:
+_____________
+
+=> spring cloud config
+=> spring cloud netflix
+	=> netflix eureka
+	=> load balancing, ribbon
+	=> fault tolernace,Hystrix
+	=> zuul
+	
+
+Configuration eureka_server
+_____________________________
+
+step 1: create spring boot project: eurekaserver and devtool dependencies
+
+step 2: put in properties files
+
+spring.application.name=eureka
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+server.port=8761
+
+
+application.yml:
+________________
+spring:
+  application:
+    name: eureka
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+server:
+  port: 8761
+
+
+
+
+step 3: apply @EnableEurekaServer
+
+done!
+
+
+
+
+
+Configuration eureka service: customer
+_______________________________________
+
+step 1: create spring boot project: eurekaclient and devtool, actuator dependencies, web
+
+step 2: put in properties files
+
+server.port=8081
+server.servlet.context-path=/custmerapp
+spring.application.name=customer-service
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+
+
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+
+
+step 3: apply @EnableEurekaClient
+
+step 4: create hello world rest controller
+
+
+
+Configuration eureka service: product
+________________________________________
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka
+
+
+
+creating order-service : 
+_______________________
+
+dependencies:
+	web, devtools, actu
+	actuator, 
+	eureka-client,
+	 hystrix, 
+	hystrix-dashboard
+
+
+Client side load balancing: ribbon
+_________________________
+	=> client side load balancing 
+	=> @LoadBalanced: used to create enhanced rest templete with inbuild load balancing
+	 
+
+
+@EnableEurekaClient
+@SpringBootApplication
+public class OrderApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(OrderApplication.class, args);
+	}
+	@Bean
+	@LoadBalanced
+	public RestTemplate getTemplate() {
+		return new RestTemplate();
+	}
+}
+
+
+
+
+
+@RestController
+public class OrderRestController {
+
+	@Autowired
+	private RestTemplate restTemplate;
+	
+	
+	@PostMapping(path="order")
+	public ResponseEntity<Order> submitOrder(@RequestBody OrderRequest orderRequest){
+		
+		// call different rest service using rest template
+
+		String couponUrl="http://COUPON_SERVICE/coupon/api/coupon/SUP10";
+		
+		String custUrl="http://CUSTOMER_SERVICE/customer/api/customer/"+cid;
+		System.out.println(custUrl);
+		String productUrl="http://PRODUCT_SERVICE/product/api/product/"+pid;
+		System.out.println(productUrl);
+		Customer customer = restTemplate.getForObject(custUrl, Customer.class,cid);
+		
+		Product product = restTemplate.getForObject(productUrl, Product.class,pid);
+		
+		Coupon coupon=restTemplate.getForObject(couponUrl, Coupon.class);	
+
+		double totalPrice= discountedPrice* orderRequest.getQuantity();
+		Order order=new Order();
+		order.setId(22);
+		order.setCustomer(customer);
+		order.setProduct(product);
+		order.setTotalPrice(totalPrice);
+		order.setOrderDate(new Date());
+		return ResponseEntity.status(HttpStatus.CREATED).body(order);
+		
+	}
+
+}
+
+
+
+
+
+
+
+
+Hystrix fault tolerance:
+_____________________
+
+
+
+step1 : enable hystrix:
+_____________________
+
+@EnableEurekaClient
+@SpringBootApplication
+@EnableHystrix
+public class OrderApplication {
+	//.......
+}
+
+
+
+step 2: applying fault handling:
+_______________________________-
+
+
+@RestController
+public class OrderRestController {
+
+	@Autowired
+	private RestTemplate restTemplate;
+	
+	
+	@PostMapping(path="order")
+	@HystrixCommand(fallbackMethod = "defaultOrder")
+	public ResponseEntity<Order> submitOrder(@RequestBody OrderRequest orderRequest){
+		//.........
+	}
+
+	public ResponseEntity<Order> defaultOrder(@RequestBody OrderRequest orderRequest){
+		return default object....
+	}
+}
+
+
+
+
+Refactoring hystrix:
+___________________
+
+@RestController
+public class OrderController {
+
+	@Autowired
+	private RestTemplate restTemplate;
+
+
+	@RequestMapping("/order")
+	public String callService() {
+		String customerInfo = getCustomerInfo();
+		String productInfo = getProductInfo();
+		return customerInfo.concat(" ").concat(productInfo);
+	}
+
+	public String getProductInfoFallBack() {
+		return "default product";
+	}
+	
+	@HystrixCommand(fallbackMethod = "getProductInfoFallBack")
+	public String getProductInfo() {
+		String productInfo = restTemplate.getForEntity("http://product-service/product", String.class).getBody();
+		return productInfo;
+	}
+	
+	@HystrixCommand(fallbackMethod = "getCustomerInfoFallback")
+	public String getCustomerInfo() {
+		String customerInfo = restTemplate.getForEntity("http://customer-service/customer", String.class).getBody();
+		return customerInfo;
+	}
+
+	public String getCustomerInfoFallback() {
+		return "default customer information";
+	}
+
+	
+}
+
+
+ => this will not work:fallback dont work
+ Why: 
+	Hystrix create a proxy class ie a wrapper on instance of api class 
+	When we call /order method, proxy comes into picture, spring wrap our method call
+
+	Now we are calling methods inside our api call hence hystrix can not apply aop onto that
+
+
+Sol:
+	We have to create a new class (Spring service) that contains methods with fallback method 
+
+hystrix apply AOP proxy on the method
+
+
+
+
+@RestController
+public class OrderRestController {
+
+	@Autowired
+	private RestTemplate restTemplate;
+	
+	@Autowired
+	private CustomerService customerService;
+	
+	@Autowired
+	private ProductService productService;
+	
+	@Autowired
+	private CouponService couponService;
+	
+
+	@PostMapping(path="order")
+	public ResponseEntity<Order> submitOrder(@RequestBody OrderRequest orderRequest){
+		
+		//first of all i need to get product infor
+		Product product = productService.getProduct(orderRequest);
+		
+		//i need to get customer info
+		Customer customer = customerService.getCustomer(orderRequest);
+		
+		//i need to get copupon details
+		
+		Coupon coupon = couponService.getCoupon(orderRequest);
+							
+		///   50000(100-10)/100
+		double discountedPrice= product.getPrice()*(100-coupon.getDiscountPercentage())/100;
+		
+		double totalPrice= discountedPrice* orderRequest.getQuantity();
+		Order order=new Order();
+		order.setId(22);
+		order.setCustomer(customer);
+		order.setProduct(product);
+		order.setTotalPrice(totalPrice);
+		order.setOrderDate(new Date());
+		return ResponseEntity.status(HttpStatus.CREATED).body(order);
+		
+	}
+
+}
+
+
+
+@Service
+public class CouponService {
+	
+	@Autowired
+	private RestTemplate restTemplate;
+	
+	@HystrixCommand(fallbackMethod = "getDefaultCoupon")
+	public Coupon getCoupon(OrderRequest orderRequest) {
+		String couponUrl = "http://COUPON-SERVICE/couponapp/couponbycode/"+orderRequest.getCouponCode();
+		Coupon coupon=restTemplate.getForObject(couponUrl, Coupon.class);
+		return coupon;
+	}
+
+	public Coupon getDefaultCoupon(OrderRequest orderRequest) {
+		return new Coupon();
+	}
+}
+
+
+@Service
+public class CustomerService {
+	
+	@Autowired
+	private RestTemplate restTemplate;
+	
+	@HystrixCommand(fallbackMethod = "getDefaultCustomer")
+	public Customer getCustomer(OrderRequest orderRequest) {
+		String customerUrl = "http://CUSTOMER-SERVICE/custmerapp/customer/"+orderRequest.getCid();
+		Customer customer=restTemplate.getForObject(customerUrl, Customer.class);
+		return customer;
+	}
+
+	public Customer getDefaultCustomer(OrderRequest orderRequest) {
+		return new Customer();
+	}
+}
+
+
+
+@Service
+public class ProductService {
+
+	@Autowired
+	private RestTemplate restTemplate;
+	
+	@HystrixCommand(fallbackMethod = "getDefaultProduct")
+	public Product getProduct(OrderRequest orderRequest) {
+		String productUrl = "http://PRODUCT-SERVICE/productapp/product/"+orderRequest.getPid();
+		Product product=restTemplate.getForObject(productUrl,Product.class);
+		return product;
+	}
+	
+	private Product getDefaultProduct(OrderRequest orderRequest) {
+		return new Product();
+	}
+}
+
+
+
+
+fine tune fault handling:
+___________________________
+
+	@RequestMapping("/order")
+	@HystrixCommand(fallbackMethod = "defaultproduct", commandProperties =
+	{
+			@HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "3000"),
+	        @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "5"),
+	        @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "5000"),
+	        @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "5000")
+	})
+
+
+
+
+
+management.endpoint.hystrix.stream.enabled=true
+management.endpoints.web.exposure.include=hystrix.stream, info, health
+management.endpoints.web.base-path=/
+
+@EnableHystrixDashboard
+public class OrderApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(OrderApplication.class, args);
+	}
+}
+
+https://stackoverflow.com/questions/49792290/unable-to-connect-to-command-metric-stream-for-hystrix-dashboard-with-spring-clo
+
+
+
+
+list of endpoints:
+_____________________
+http://localhost:8082/productapp/product/1
+
+
+http://localhost:8085/couponapp/couponbycode/SUP20
+
+http://localhost:8081/custmerapp/customer/1
+
+http://localhost:8080/orderapp/order
+
+{
+"cid":1,
+"pid":1,
+"quantity":4,
+"couponCode":"SUP20"
+}
+
+
+
+with Zuul:
+http://localhost:8100/product/productapp/product/1
+
+http://localhost:8100/coupon/couponapp/couponbycode/SUP20
+
+
+
+
+
+
+
+
+
+
+
+Zuul api gateway: single entry point ccc
+_______________________________________
+
+Need of api gateway?
+___________________
+Separation between clients and microservices
+Simplified clients
+Any change in location of microservices is not going to affect the clients
+Optimal API for each client as per requirement
+
+
+Now configure zuul proxy server:
+________________________________
+
+api-gateway: dependencies: web, zuul, devtools, actuator
+
+
+@EnableZuulProxy
+@SpringBootApplication
+public class GatewayApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(GatewayApplication.class, args);
+	}
+
+}
+
+application.yml
+________________
+
+server:
+  port: 8100
+spring:
+  application:
+    name: api-gateway
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+zuul:
+  routes:
+    customer-service:
+      path: /customer/**
+      service-id: customer-service
+      strip-prefix: true
+    product-service:
+      path: /product/**
+      service-id: product-service
+      strip-prefix: true
+    coupon-service:
+      path: /coupon/**
+      service-id: coupon-service
+      strip-prefix: true
+    order-service:
+      path: /order/**
+      service-id: order-service
+      strip-prefix: true  
+management: 
+  endpoints: 
+    web: 
+      exposure: 
+        include: '*'
+
+
+
+NOTE: check at end
+
+1)zuul filters:
+2)cloud gatway: alternative of zuul api gateway
+
+
+
+
+JWT security configuration steps:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. dao layer
+
+@Data
+@NoArgsConstructor
+@Entity
+@Table(name = "user_table")
+public class User {
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+	private String username;
+	private String password;
+	private String email;
+}
+
+@Repository
+public interface UserDao extends JpaRepository<User, Integer>{
+	public User findByUsernameAndPassword(String username, String password);
+}
+
+
+2. service layer:
+________________
+public interface AuthenticationService {
+	public boolean verifyUser(String username, String password);
+	public void addUser(User user);
+	public String generateToken(String username);
+}
+
+
+
+@Service
+@Transactional
+public class AuthenticationServiceImpl implements AuthenticationService {
+
+	@Autowired
+	private UserDao userDao;
+
+	@Override
+	public boolean verifyUser(String username, String password) {
+		User user = userDao.findByUsernameAndPassword(username, password);
+		if (user != null)
+			return true;
+		else
+			return false;
+	}
+
+	@Override
+	public String generateToken(String username) {
+		return Jwts.builder().setSubject(username).setIssuedAt(new Date())
+				.setExpiration(new Date(System.currentTimeMillis()+50000))
+				.signWith(SignatureAlgorithm.HS256, "ustdemo")
+				.compact();
+	}
+
+	@Override
+	public void addUser(User user) {
+		userDao.save(user);
+	}
+
+}
+
+
+3. controller
+________________
+
+@RestController
+public class AuthController {
+
+	@Autowired
+	private AuthenticationService authService;
+
+	@GetMapping("/auth")
+	public String homeHander() {
+		return "welcome to auth server";
+	}
+
+	@PostMapping("/login")
+	public ResponseEntity<?> loginHander(@RequestBody LoginRequest loginRequest) {
+		System.out.println(loginRequest);
+		boolean isValid = authService.verifyUser(loginRequest.getUsername(), loginRequest.getPassword());
+
+		Map<String, String> responseMap = new HashMap<>();
+		String token = null;
+		if (isValid) {
+			token = authService.generateToken(loginRequest.getUsername());
+			responseMap.put("token", token);
+			responseMap.put("message", "login successfull");
+			return ResponseEntity.ok(responseMap);
+		} else {
+			responseMap.clear();
+			responseMap.put("token", null);
+			responseMap.put("message", "invalid");
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseMap);
+		}
+
+	}
+}
+
+
+Configiure jwt filter :
+____________________
+@EnableZuulProxy
+@SpringBootApplication
+public class ApiGatewayApplication implements CommandLineRunner {
+
+	......
+
+	@Bean
+	public FilterRegistrationBean filterRegistrationBean(){
+		FilterRegistrationBean bean=new FilterRegistrationBean();
+		bean.setFilter(new JwtFilter());
+		bean.addUrlPatterns("/auth/*");
+		return bean;
+	}
+}
+
+
+JwtFilter
+__________
+@Service
+public class JwtFilter implements Filter {
+
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+			throws IOException, ServletException {
+		HttpServletRequest req = (HttpServletRequest) request;
+		HttpServletResponse resp = (HttpServletResponse) response;
+
+		String authHeader = req.getHeader("Authorization");
+		// pre flight header
+		if (req.getMethod().equals("OPTIONS")) {
+			resp.setStatus(resp.SC_OK);
+			chain.doFilter(request, response);
+		} else {
+			if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+				resp.sendError(403);
+				return ;
+			}
+			System.out.println(authHeader);
+			
+			String token = authHeader.split(" ")[1];
+			System.out.println(token);
+
+			try {
+				Claims claims = Jwts.parser().
+						setSigningKey("ustdemo")
+						.parseClaimsJws(token).getBody();
+				System.out.println(claims.getSubject());
+				request.setAttribute("claims", claims);
+				chain.doFilter(request, response);
+			} catch (Exception ex) {
+				resp.sendError(403);
+			}
+		}
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+ 	
+<dependency>
+	<groupId>io.jsonwebtoken</groupId>
+	<artifactId>jjwt</artifactId>
+	<version>0.9.1</version>
+</dependency>
+      
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-jwt</artifactId>
+    <version>1.0.10.RELEASE</version>
+</dependency>
+
+
+
+
+
+
+spring boot microservice configuration:
+____________________________________
+
+=> unserstanding spring boot configuration
+=> configure features in spring boot
+	value , configprops, Actuator, spring profile, enviornment
+=> spring cloud config server
+=> dynamic configuration
+=> best practices and patterns
+
+=> config features in sprng boot
+	value 
+	configprops
+	Actuator
+	spring profiles
+	environment
+=> spring cloud config server
+
+=> Dynamic configuration
+
+spring boot ms configuration goals
+__________________________________
+
+	=> externalized
+		property file should be externalized for loose coupling
+	=> environment specfic
+		test, prod, dev, default
+	=> consistent
+		In microservice we have many spring boot project that must have same configuration parameters, we 			should manage them centerally (using git) rather than locally
+	=> version histroy
+	    spring clould provide provision for version history using git
+	=> real time management
+
+	=> Dont hard code!
+
+Spring boot profile hello world
+__________________________
+
+application.properties
+____________________
+hello.message=jug delhi
+#spring.profiles.active=dev
+
+
+application-dev.properties
+
+hello.message=jug delhi dev
+
+
+
+application.properties
+
+hello.message-test=jug delhi test
+
+
+
+@RestController
+public class Hello {
+
+	@Value("${hello.message}")
+	private String message;
+	
+	@GetMapping("/")
+	public String sayHello() {
+		return "hello  "+ message;
+	}
+}
+
+
+Running from cmd:
+______________
+java -jar demo-0.0.1-SNAPSHOT.jar --hello.message="hello to spring boot channed message"
+
+
+running on differnt port:
+_________________________
+
+java -jar  jpa_demo2-0.0.1-SNAPSHOT.jar --server.port=8050
+
+java -jar -Dspring.profiles.active=prod demoapp.jar 
+
+
+Providing default value with @Value annotation , so that config not fail at run time:
+_______________________________________________
+
+@RestController
+public class Hello {
+
+	@Value("${hello.message: default value}")
+	private String message;
+	
+	@GetMapping("/")
+	public String sayHello() {
+		return "hello  "+ message;
+	}
+}
+
+
+
+
+
+Using actuator:
+______________
+
+Spring Boot Actuator is used to gather metrics using REST endpoints.
+1. What is Actuator
+2. What is the use of Actuator
+3. How to Configure Actuator
+4.  Actuator Metrics
+5. All REST Endpoints exposed by Actuator
+6.  example on all end points like health, beans, cace, configParams, httptrace, mappings, env ...etc
+
+Enable actuator:
+
+management.endpoints.web.exposure.include=*
+
+
+http://localhost:8080/actuator
+
+https://www.javadevjournal.com/spring-boot/spring-boot-actuator/
+https://www.javadevjournal.com/spring-boot/spring-boot-actuator-custom-endpoint/
+
+
+
+
+
+
+spring cloud config server?
+____________________________
+
+https://medium.com/@ijayakantha/microservices-centralized-configuration-with-spring-cloud-f2a1f7b78cc2
+
+Why spring cloud config server?
+_______________________________
+
+	=> in microservice model we have to configure multiple services
+	=> externilization and env specific and real time mgt
+
+
+	M1	---------
+
+	M2	-------		Configuration service		-- git : local
+	
+	M3	-------
+
+
+
+Spring config server + local git configuration:
+______________________________________________
+
+dep:config server, actuator
+step 1: create local git config
+
+application.properties
+spring.datasource.url=jdbc:mysql://localhost:3306/kr_jdbc?useSSL=false
+spring.datasource.username=root
+spring.datasource.password=root
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+commit 
+
+
+step 2: configure config server:
+____________________________
+spring.application.name=configserver
+spring.cloud.config.server.git.uri=/home/raj/Desktop/config
+#spring.cloud.config.server.git.clone-on-start=true
+server.port=8888
+spring.cloud.config.server.git.default-label=master
+
+
+
+spring.cloud.config.server.git.uri=/home/raj/Desktop/config
+server.port=8888
+
+
+
+@EnableConfigServer
+@SpringBootApplication
+public class ConfigServerApplication {
+}
+
+
+step 3: check endpoint
+_________________________
+
+http://localhost:8888/application/default
+
+
+For remote git uri:
+spring.cloud.config.server.git.uri=https://github.com/rgupta00/config_server
+
+
+
+
+
+Configure config client:
+_______________________
+dependencies: web, config client, actuator
+
+
+
+configuration client application.properties
+__________________________________________
+
+management.endpoints.web.exposure.include=*
+spring.cloud.config.uri=http://localhost:8888
+
+
+
+@RestController
+public class Hello {
+
+	@Value("${spring.datasource.url: default value}")
+	private String url;
+	
+	@GetMapping("/")
+	public String sayHello() {
+		return url;
+	}
+}
+
+
+
+Refreshing properties at run time:
+________________________________
+
+	=> we need to register refresh hook to the client
+	=> dont forget to enable managment endpoints in client
+
+Step 1:
+_______
+
+@RefreshScope
+@RestController
+public class Hello {
+
+	@Value("${spring.datasource.url: default value}")
+	private String url;
+	
+	@GetMapping("/")
+	public String sayHello() {
+		return url;
+	}
+}
+
+step 2: chnage configuration and commit
+
+step 3: in client application use refresh endpoint
+
+http://localhost:8080/actuator/refresh
+
+
+
+
+Feign client:
+______________
+Feign is a declarative web service client.
+ It makes writing web service clients easier.
+
+ To use Feign create an interface and annotate it.
+ 
+ Feign is a declarative framework developed by Netflix for implementing REST API clients.
+
+
+
+Steps to integrate Open Feign
+______________________________
+
+1 - Needs to add feign dependency in pom.xml spring-cloud-starter-openfeign
+2 - Enable open feign from application class @EnableFeignClients
+3 - Create interface and annotate with FeignClient
+
+
+
+
+@SpringBootApplication
+@EnableEurekaClient
+@EnableFeignClients
+public class CustomerServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(CustomerServiceApplication.class, args);
+    }
+}
+
+
+
+
+@FeignClient(name = "book-service")
+public interface BookStoreClient {
+  @GetMapping
+ ResponseEntity bookList();
+
+ @GetMapping("/{id}")
+ ResponseEntity bookOne(@PathVariable("id") Long id);
+
+ @PostMapping
+ ResponseEntity bookAdd(@RequestBody Book book);
+
+ @PutMapping
+ ResponseEntity bookUpdate(@RequestBody Book book);
+
+ @DeleteMapping("/{id}")
+ ResponseEntity bookDelete(@PathVariable("id") Long id);
+}
+
+
+Now use in client application:
+____________________________
+
+
+@Autowired
+private BookFeignClient bookFeignClient;
+
+bookFeignClient.bookList().getBody()
+bookFeignClient.bookOne(id).getBody()
+bookFeignClient.bookAdd(book)
+bookFeignClient.bookUpdate(book)
+bookFeignClient.bookDelete(id).getBody()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+zuul filters:
+_____________
+pre, post ,error filtes
+
+
+pre filter:
+____________
+
+@Configuration
+public class PreFilter extends ZuulFilter{
+	private static Logger log = LoggerFactory.getLogger(PreFilter.class);
+
+    @Override
+    public String filterType() {
+        return "pre";
+    }
+
+    @Override
+    public int filterOrder() {
+        return 1;
+    }
+
+    @Override
+    public boolean shouldFilter() {
+        return true;
+    }
+
+    @Override
+    public Object run() {
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        log.info("Request method = {}, url = {}", request.getMethod(), request.getRequestURL().toString());
+        return null;
+    }
+}
+
+
+post filter:
+____________
+@Configuration
+public class Postfilter extends ZuulFilter {
+    private static Logger log = LoggerFactory.getLogger(Postfilter.class);
+
+    @Override
+    public String filterType() {
+        return "post";
+    }
+
+    @Override
+    public int filterOrder() {
+        return 1;
+    }
+
+    @Override
+    public boolean shouldFilter() {
+        return true;
+    }
+
+    @Override
+    public Object run() {
+        RequestContext ctx = RequestContext.getCurrentContext();
+
+        HttpServletResponse response = ctx.getResponse();
+        //ctx.getResponse().setStatus(500);
+        log.info("Response  Status= {}", response.getStatus());
+
+        try (InputStream is = ctx.getResponseDataStream()) {
+            String respData = CharStreams.toString(new InputStreamReader(is, CharEncoding.UTF_8));
+            log.info("Response  Data = {}", respData);
+            ctx.setResponseBody(respData);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+        return null;
+    }
+}
+
+
+
+error filter:
+___________
+
+@Configuration
+public class Errorfilter extends ZuulFilter {
+    private static Logger log = LoggerFactory.getLogger(Errorfilter.class);
+    @Override
+    public String filterType() {
+        return "error";
+    }
+    @Override
+    public int filterOrder() {
+        return 1;
+    }
+    @Override
+    public boolean shouldFilter() {
+        return true;
+    }
+    @Override
+    public Object run() {
+        RequestContext ctx = RequestContext.getCurrentContext();
+
+        String response = ctx.getResponseBody();
+        log.info("Error occurred, Response  = {}, ", response);
+        return null;
+    }
+}
+
+
+
+route filter:
+__________
+
+@Configuration
+public class Routefilter extends ZuulFilter {
+    private static Logger log = LoggerFactory.getLogger(Routefilter.class);
+    @Override
+    public String filterType() {
+        return "route";
+    }
+    @Override
+    public int filterOrder() {
+        return 1;
+    }
+    @Override
+    public boolean shouldFilter() {
+        return true;
+    }
+    @Override
+    public Object run() {
+
+        log.info("Inside route filter..");
+        return null;
+    }
+}
+
+
+Management Endpoints:
+___________________
+Netflix Zuul Actuator endpoints 
+
+Enable endpoints:
+---------------
+management: 
+  endpoints: 
+    web: 
+      exposure: 
+        include: '*'
+
+
+we are intrested in filters and rountes
+
+http://localhost:8100/actuator/filters
+http://localhost:8100/actuator/routes
+
+
+ref:
+	https://cloud.spring.io/spring-cloud-netflix/multi/multi__router_and_filter_zuul.html#_management_endpoints
+
+
+
+Zuul configure timeout:
+____________________
+
+if our service is taking too much time we can configure zuul time out and it throw some exceptions
+
+
+
+@RestController
+public class ProductController {	
+	@RequestMapping("/product")
+	public String HelloWorld() {
+		try {
+			Thread.sleep(20000);
+		}catch(InterruptedException ex) {
+			ex.printStackTrace();
+		}
+		return "product information...instance 1";
+	}
+
+Now we will configure timeout for whole project using zuul configuration:
+_____________________________________________________________________
+
+zuul:
+  routes:
+    customer-service:
+     url: http://localhost:8081
+    product-service:
+     url: http://localhost:8082
+    order-service:
+     url: http://localhost:8080
+  host:
+    connect-timeout-millis: 2000
+    socket-timeout-millis: 5000
+
+
+
+
+
+cloud gatway: better alternative of zuul api gateway
+_______________________________________________________
+
+https://www.javainuse.com/spring/cloud-gateway
+
+
+
+
+server:
+  port: 8100
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: customerModule
+        uri: http://localhost:8081/
+        predicates:
+        - Path=/customer/**
+      - id: productModule
+        uri: http://localhost:8083/
+        predicates:
+        - Path=/product/**
+      - id: orderModule
+        uri: http://localhost:8080/
+        predicates:
+        - Path=/order/**
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+
+server:
+  port: 8100
+spring:
+  application:
+    name: spring-cloud-gateway
+  cloud:
+    gateway:
+      routes:
+      - id: customerModule
+        uri:  lb://CUSTOMER-SERVICE
+        predicates:
+        - Path=/customer/**
+      - id: productModule
+        uri:  lb://PRODUCT-SERVICE
+        predicates:
+        - Path=/product/**
+      - id: orderModule
+        uri:  lb://ORDER-SERVICE
+        predicates:
+        - Path=/order/**
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Feign
+___________
+The Feign is a declarative web service (HTTP client) developed by Netflix. 
+Its aim is to simplify the HTTP API clients. It is a Java to HTTP client binder. 
+If you want to use Feign, create an interface, and annotate it. 
+
+
+It is a library for creating REST API clients. It makes web service clients easier. 
+The developers can use declarative annotations to call the REST services instead of writing representative boilerplate code.
+
+
+
+
+Example:
+https://jsonplaceholder.typicode.com/users
+
+https://www.javatpoint.com/using-feign-rest-client-for-service-invocation
+https://stackoverflow.com/questions/46884362/what-are-the-advantages-and-disadvantages-of-using-feign-over-resttemplate
+
+
+
+Very good tut on ms
+https://blog.scottlogic.com/2019/10/31/building-microservices-with-spring-boot.html
+https://www.youtube.com/watch?v=MehQOXGHhV0&t=436s
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,123 @@
+<dependency>
+    <groupId>org.apache.logging.log4j</groupId>
+    <artifactId>log4j-api</artifactId>
+    <version>2.12.1</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.logging.log4j</groupId>
+    <artifactId>log4j-core</artifactId>
+    <version>2.12.1</version>
+</dependency>
+
+
+https://www.baeldung.com/slf4j-with-log4j2-logback
+
+log4j2.xml
+--------
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+  <Appenders>
+ 
+    <!-- Console Appender -->
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %msg%n" />
+    </Console>
+     
+  </Appenders>
+  <Loggers>
+    <!-- Log everything in hibernate -->
+    <Logger name="org.hibernate" level="info" additivity="false">
+      <AppenderRef ref="Console" />
+    </Logger>
+ 
+    <!-- Log all SQL statements -->
+    <Logger name="org.hibernate.SQL" level="debug" additivity="false">
+      <AppenderRef ref="Console" />     
+    </Logger>
+ 
+    <Root level="error">
+      <AppenderRef ref="Console" />     
+    </Root>
+  </Loggers>
+</Configuration>
+
+
+
+log4j2.xml: adding logs to a file
+----------------
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+  <Appenders>
+ 
+    <!-- Console Appender -->
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %msg%n" />
+    </Console>
+ 
+    <!-- File Appender -->
+    <File name="File" fileName="hibernate.log">
+      <PatternLayout pattern="%d{yyyy-MMM-dd HH:mm:ss a} [%t] %-5level %logger{36} - %msg%n" />
+    </File>
+     
+  </Appenders>
+  <Loggers>
+    <!-- Log everything in hibernate -->
+    <Logger name="org.hibernate" level="info" additivity="false">
+      <AppenderRef ref="Console" />
+      <AppenderRef ref="File" />
+    </Logger>
+ 
+    <!-- Log SQL statements -->
+    <Logger name="org.hibernate.SQL" level="debug" additivity="false">
+      <AppenderRef ref="Console" />
+      <AppenderRef ref="File" />
+    </Logger>
+ 
+    <Root level="error">
+      <AppenderRef ref="Console" />
+      <AppenderRef ref="File" />
+    </Root>
+  </Loggers>
+</Configuration>
+
+
+
+
+
+
+log4j2.xml: adding logs to a file
+----------------
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+	<Properties>
+		<Property name="baseDir">logs</Property>
+	</Properties>
+	<Appenders>
+		<RollingFile name="RollingFile" fileName="${baseDir}/app.log"
+			filePattern="${baseDir}/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz">
+			<PatternLayout>
+				<Pattern>%d{dd:MM:yyyy - HH:mm:ss.SSS} %-3p %c{2} [%t] - %m%n
+				</Pattern>
+			</PatternLayout>
+			<Policies>
+				<SizeBasedTriggeringPolicy size="1KB" />
+			</Policies>
+		</RollingFile>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %m%n" />
+		</Console>
+	</Appenders>
+	<Loggers>
+		<Logger name="com.loggers.one.App" level="error"
+			additivity="false">
+			<AppenderRef ref="Console" />
+		</Logger>
+		<Logger name="com.loggers.two" level="error" additivity="false">
+			<AppenderRef ref="RollingFile" />
+		</Logger>
+		<Root level="trace">
+			<AppenderRef ref="RollingFile" />
+		</Root>
+	</Loggers>
+</Configuration>

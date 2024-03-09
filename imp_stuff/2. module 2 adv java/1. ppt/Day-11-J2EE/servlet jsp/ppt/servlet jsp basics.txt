@@ -1,0 +1,201 @@
+
+servlet jsp:
+
+step 1: maven dependencies
+
+<dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>jstl</artifactId>
+      <version>1.2</version>
+    </dependency>
+    
+    
+step 2: web.xml
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+	      http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0">
+
+</web-app>
+
+
+
+
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+	      http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0">
+
+    <welcome-file-list>
+        <welcome-file>login.jsp</welcome-file>
+    </welcome-file-list>
+
+
+
+    <servlet>
+        <servlet-name>customerController</servlet-name>
+        <servlet-class>com.customerapp.web.controller.CustomerController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>customerController</servlet-name>
+            <url-pattern>/customer.do</url-pattern>
+    </servlet-mapping>
+
+</web-app>
+
+
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@page import="com.customerapp.dao.customer.Customer"%>
+
+<%@page import="java.util.*"%>
+<html>
+<head>
+
+    <title>customer app</title>
+</head>
+
+<body>
+<br>
+<table border=1>
+    <thead>
+    <tr>
+        <th>Customer id</th>
+        <th>name</th>
+        <th>address</th>
+        <th>mobile</th>
+        <th>email</th>
+    </tr>
+    </thead>
+    <tbody>
+    <c:forEach items="${customerList}" var="customer">
+        <tr>
+            <td><c:out value="${customer.id }"/> </td>
+            <td><c:out value="${customer.name}"/> </td>
+            <td><c:out value="${customer.address}"/> </td>
+            <td><c:out value="${customer.mobile}"/> </td>
+            <td><c:out value="${customer.email}"/> </td>
+        </tr>
+    </c:forEach>
+    </tbody>
+</table>
+
+
+</body>
+</html>
+
+
+Application 1: Calculator application
+
+	form:
+
+	<form action="Cal.do" method="post">
+		Enter first No : <input type="text" name="numberA"/><br/>
+		Enter second No:<input type="text" name="numberB"/><br/><br/>
+		<input type="submit"/>	
+	</form>
+
+
+	Application 2: Book Advice Application
+
+
+	Step 1: 
+
+	create view:
+	---------------
+
+	create form:
+
+		<html><body>
+		<h1 align="center">Book Selection Page</h1>
+		<form action="SelectBook" method="post"> 
+		Select book <p>
+ 
+		Book: 
+		<select name="topic" size="1"> 
+		<option value="Java">Java</option> 
+		<option value="Servlet">Servlet</option> 
+		<option value="Struts">Struts</option> 
+
+		</select> 
+		<br><br> 
+		<center> 
+		<input type="submit"> 
+		</center>
+		</form>
+		</body>
+		</html>
+
+
+	
+	Create controller
+	---------------------
+			
+		String topic=request.getParameter("topic");
+		List<String>choices=BookAdviser.bookAdviser(topic);
+		request.setAttribute("booklist", choices);
+		RequestDispatcher rd=request.getRequestDispatcher("show2.jsp");
+		rd.forward(request, response);
+
+
+	create model 
+	-----------------
+
+
+
+	public class BookAdviser {
+
+	public static List<String> bookAdviser(String topic){
+		List<String>list=new ArrayList<String>();
+		
+		if(topic.equalsIgnoreCase("Java")){
+			list.add("head first");
+			list.add("thinking in java");
+		}else if(topic.equalsIgnoreCase("Servlet")){
+			list.add("head first servlet jsp");
+			list.add("core servlet.com");
+		}else if(topic.equalsIgnoreCase("Struts")){
+			list.add("struts2 in action");
+			list.add("black book");
+		}else
+			list.add("no book");
+		
+		return list;
+	}
+	}
+
+
+	create display.jsp
+	---------------------
+
+	<%
+	List<String>list=(List<String>)request.getAttribute("key");
+	Iterator it=list.iterator();
+	while(it.hasNext()){
+		out.print(it.next()+"</br>");
+	}
+
+	%>
+
+
+
+
+	better view
+	------------
+
+	<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+
+	<c:forEach var="book" items="${booklist}">
+   		 <b> ${book} </b><br/>
+	</c:forEach>
+

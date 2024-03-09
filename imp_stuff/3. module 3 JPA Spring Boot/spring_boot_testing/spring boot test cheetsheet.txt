@@ -1,0 +1,909 @@
+Spring boot testing:
+------------------------
+
+spring.jpa.show-sql=true
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2console/
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+
+	
+step 1:
+-----
+testing repo layer
+----------------------------
+
+package com.empapp.repository;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.annotation.Rollback;
+
+import com.empapp.model.Employee;
+
+@DataJpaTest
+public class EmployeeRespositoryTests {
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    // JUnit test for save employee operation
+    //@DisplayName("JUnit test for save employee operation")
+    @Rollback(false)
+    @Test
+    public void givenEmployeeObject_whenSave_thenReturnSavedEmployee(){
+
+        //given - precondition or setup
+        Employee employee = Employee.builder()
+                .firstName("rajeev")
+                .lastName("gupta")
+                .email("rgupta@gmail,com")
+                .build();
+        // when - action or the behaviour that we are going test
+        Employee savedEmployee = employeeRepository.save(employee);
+
+        // then - verify the output
+        assertThat(savedEmployee).isNotNull();
+        assertThat(savedEmployee.getId()).isGreaterThan(0);
+    }
+
+
+    @Disabled
+    // JUnit test for get all employees operation
+    @DisplayName("JUnit test for get all employees operation")
+    @Test
+    public void givenEmployeesList_whenFindAll_thenEmployeesList(){
+        // given - precondition or setup
+        Employee employee = Employee.builder()
+        		 .firstName("rajeev")
+                 .lastName("gupta")
+                 .email("rgupta@gmail,com")
+                .build();
+
+        Employee employee1 = Employee.builder()
+                .firstName("John")
+                .lastName("Cena")
+                .email("cena@gmail,com")
+                .build();
+
+        employeeRepository.save(employee);
+        employeeRepository.save(employee1);
+
+        // when -  action or the behaviour that we are going test
+        List<Employee> employeeList = employeeRepository.findAll();
+
+        // then - verify the output
+        assertThat(employeeList).isNotNull();
+        assertThat(employeeList.size()).isEqualTo(2);
+
+    }
+
+    @Disabled
+    // JUnit test for get employee by id operation
+    @DisplayName("JUnit test for get employee by id operation")
+    @Test
+    public void givenEmployeeObject_whenFindById_thenReturnEmployeeObject(){
+        // given - precondition or setup
+        Employee employee = Employee.builder()
+        		 .firstName("rajeev")
+                 .lastName("gupta")
+                 .email("rgupta@gmail,com")
+                .build();
+        employeeRepository.save(employee);
+
+        // when -  action or the behaviour that we are going test
+        Employee employeeDB = employeeRepository.findById(employee.getId()).get();
+
+        // then - verify the output
+        assertThat(employeeDB).isNotNull();
+    }
+
+    @Disabled
+    // JUnit test for get employee by email operation
+    @DisplayName("JUnit test for get employee by email operation")
+    @Test
+    public void givenEmployeeEmail_whenFindByEmail_thenReturnEmployeeObject(){
+        // given - precondition or setup
+        Employee employee = Employee.builder()
+        		 .firstName("rajeev")
+                 .lastName("gupta")
+                 .email("rgupta@gmail,com")
+                .build();
+        employeeRepository.save(employee);
+
+        // when -  action or the behaviour that we are going test
+        Employee employeeDB = employeeRepository.findByEmail(employee.getEmail()).get();
+
+        // then - verify the output
+        assertThat(employeeDB).isNotNull();
+    }
+
+    @Disabled
+    // JUnit test for update employee operation
+    @DisplayName("JUnit test for update employee operation")
+    @Test
+    
+    public void givenEmployeeObject_whenUpdateEmployee_thenReturnUpdatedEmployee(){
+        // given - precondition or setup
+        Employee employee = Employee.builder()
+                 .firstName("rajeev")
+                .lastName("gupta")
+                .email("rgupta@gmail,com")
+                .build();
+        employeeRepository.save(employee);
+
+        // when -  action or the behaviour that we are going test
+        Employee savedEmployee = employeeRepository.findById(employee.getId()).get();
+        savedEmployee.setEmail("ram@gmail.com");
+        savedEmployee.setFirstName("Ram");
+        Employee updatedEmployee =  employeeRepository.save(savedEmployee);
+
+        // then - verify the output
+        assertThat(updatedEmployee.getEmail()).isEqualTo("ram@gmail.com");
+        assertThat(updatedEmployee.getFirstName()).isEqualTo("Ram");
+    }
+
+    @Disabled
+    // JUnit test for delete employee operation
+    @DisplayName("JUnit test for delete employee operation")
+    @Test
+    public void givenEmployeeObject_whenDelete_thenRemoveEmployee(){
+        // given - precondition or setup
+        Employee employee = Employee.builder()
+        		 .firstName("rajeev")
+                 .lastName("gupta")
+                 .email("rgupta@gmail,com")
+                .build();
+        employeeRepository.save(employee);
+
+        // when -  action or the behaviour that we are going test
+        employeeRepository.deleteById(employee.getId());
+        Optional<Employee> employeeOptional = employeeRepository.findById(employee.getId());
+
+        // then - verify the output
+        assertThat(employeeOptional).isEmpty();
+    }
+
+    @Disabled
+    // JUnit test for custom query using JPQL with index
+    //@DisplayName("JUnit test for custom query using JPQL with index")
+    //@Test
+    public void givenFirstNameAndLastName_whenFindByJPQL_thenReturnEmployeeObject(){
+        // given - precondition or setup
+        Employee employee = Employee.builder()
+                .firstName("rajeev")
+                .lastName("gupta")
+                .email("rgupta@gmail,com")
+                .build();
+        employeeRepository.save(employee);
+        String firstName = "Ramesh";
+        String lastName = "Fadatare";
+
+        // when -  action or the behaviour that we are going test
+        Employee savedEmployee = employeeRepository.findByJPQL(firstName, lastName);
+
+        // then - verify the output
+        assertThat(savedEmployee).isNotNull();
+    }
+
+    @Disabled
+    // JUnit test for custom query using JPQL with Named params
+    //@DisplayName("JUnit test for custom query using JPQL with Named params")
+    //@Test
+    public void givenFirstNameAndLastName_whenFindByJPQLNamedParams_thenReturnEmployeeObject(){
+        // given - precondition or setup
+        Employee employee = Employee.builder()
+        		 .firstName("rajeev")
+                 .lastName("gupta")
+                 .email("rgupta@gmail,com")
+                .build();
+        employeeRepository.save(employee);
+        String firstName = "Ramesh";
+        String lastName = "Fadatare";
+
+        // when -  action or the behaviour that we are going test
+        Employee savedEmployee = employeeRepository.findByJPQLNamedParams(firstName, lastName);
+
+        // then - verify the output
+        assertThat(savedEmployee).isNotNull();
+    }
+
+    @Disabled
+// JUnit test for custom query using native SQL with index
+    @DisplayName("JUnit test for custom query using native SQL with index")
+    @Test
+    public void givenFirstNameAndLastName_whenFindByNativeSQL_thenReturnEmployeeObject(){
+        // given - precondition or setup
+        Employee employee = Employee.builder()
+        		 .firstName("rajeev")
+                 .lastName("gupta")
+                 .email("rgupta@gmail,com")
+                .build();
+        employeeRepository.save(employee);
+       // String firstName = "Ramesh";
+       // String lastName = "Fadatare";
+
+        // when -  action or the behaviour that we are going test
+        Employee savedEmployee = employeeRepository.findByNativeSQL(employee.getFirstName(), employee.getLastName());
+
+        // then - verify the output
+        assertThat(savedEmployee).isNotNull();
+    }
+
+    @Disabled
+    // JUnit test for custom query using native SQL with named params
+    @DisplayName("JUnit test for custom query using native SQL with named params")
+    @Test
+    public void givenFirstNameAndLastName_whenFindByNativeSQLNamedParams_thenReturnEmployeeObject(){
+        // given - precondition or setup
+        Employee employee = Employee.builder()
+        		 .firstName("rajeev")
+                 .lastName("gupta")
+                 .email("rgupta@gmail,com")
+                .build();
+        employeeRepository.save(employee);
+        // String firstName = "Ramesh";
+        // String lastName = "Fadatare";
+
+        // when -  action or the behaviour that we are going test
+        Employee savedEmployee = employeeRepository.findByNativeSQLNamed(employee.getFirstName(), employee.getLastName());
+
+        // then - verify the output
+        assertThat(savedEmployee).isNotNull();
+    }
+
+}
+
+
+
+
+Testing service layer:
+--------------------
+
+
+package com.empapp.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.empapp.exception.ResourceNotFoundException;
+import com.empapp.model.Employee;
+import com.empapp.repository.EmployeeRepository;
+
+@ExtendWith(MockitoExtension.class)
+public class EmployeeServiceTests {
+
+    @Mock
+    private EmployeeRepository employeeRepository;
+
+    @InjectMocks
+    private EmployeeServiceImpl employeeService;
+
+    private Employee employee;
+
+    @BeforeEach
+    public void setup(){
+        //employeeRepository = Mockito.mock(EmployeeRepository.class);
+        //employeeService = new EmployeeServiceImpl(employeeRepository);
+        employee = Employee.builder()
+                .id(1L)
+                .firstName("rajeev")
+                .lastName("gupta")
+                .email("rgupta@gmail.com")
+                .build();
+    }
+
+    @Disabled
+    // JUnit test for saveEmployee method
+    @DisplayName("JUnit test for saveEmployee method")
+    @Test
+    public void givenEmployeeObject_whenSaveEmployee_thenReturnEmployeeObject(){
+        // given - precondition or setup
+        given(employeeRepository.findByEmail(employee.getEmail()))
+                .willReturn(Optional.empty());
+
+        given(employeeRepository.save(employee)).willReturn(employee);
+
+        System.out.println(employeeRepository);
+        System.out.println(employeeService);
+
+        // when -  action or the behaviour that we are going test
+        Employee savedEmployee = employeeService.saveEmployee(employee);
+
+        System.out.println(savedEmployee);
+        // then - verify the output
+        assertThat(savedEmployee).isNotNull();
+    }
+
+    // JUnit test for saveEmployee method
+    @DisplayName("JUnit test for saveEmployee method which throws exception")
+    @Test
+    public void givenExistingEmail_whenSaveEmployee_thenThrowsException(){
+        // given - precondition or setup
+        given(employeeRepository.findByEmail(employee.getEmail()))
+                .willReturn(Optional.of(employee));
+
+     
+        // when -  action or the behaviour that we are going test
+        org.junit.jupiter.api.Assertions.assertThrows(ResourceNotFoundException.class, () -> {
+            employeeService.saveEmployee(employee);
+        });
+
+        // then
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Disabled
+    // JUnit test for getAllEmployees method
+    @DisplayName("JUnit test for getAllEmployees method")
+    @Test
+    public void givenEmployeesList_whenGetAllEmployees_thenReturnEmployeesList(){
+        // given - precondition or setup
+
+        Employee employee1 = Employee.builder()
+                .id(2L)
+                .firstName("Tony")
+                .lastName("Stark")
+                .email("tony@gmail.com")
+                .build();
+
+        given(employeeRepository.findAll()).willReturn(Arrays.asList(employee,employee1));
+
+        // when -  action or the behaviour that we are going test
+        List<Employee> employeeList = employeeService.getAllEmployees();
+
+        // then - verify the output
+        assertThat(employeeList).isNotNull();
+        assertThat(employeeList.size()).isEqualTo(2);
+    }
+
+    @Disabled
+    // JUnit test for getAllEmployees method
+    @DisplayName("JUnit test for getAllEmployees method (negative scenario)")
+    @Test
+    public void givenEmptyEmployeesList_whenGetAllEmployees_thenReturnEmptyEmployeesList(){
+        // given - precondition or setup
+
+        Employee employee1 = Employee.builder()
+                .id(2L)
+                .firstName("Tony")
+                .lastName("Stark")
+                .email("tony@gmail.com")
+                .build();
+
+        given(employeeRepository.findAll()).willReturn(Collections.emptyList());
+
+        // when -  action or the behaviour that we are going test
+        List<Employee> employeeList = employeeService.getAllEmployees();
+
+        // then - verify the output
+        assertThat(employeeList).isEmpty();
+        assertThat(employeeList.size()).isEqualTo(0);
+    }
+
+    @Disabled
+    // JUnit test for getEmployeeById method
+    @DisplayName("JUnit test for getEmployeeById method")
+    @Test
+    public void givenEmployeeId_whenGetEmployeeById_thenReturnEmployeeObject(){
+        // given
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
+
+        // when
+        Employee savedEmployee = employeeService.getEmployeeById(employee.getId()).get();
+
+        // then
+        assertThat(savedEmployee).isNotNull();
+
+    }
+
+    @Disabled
+    // JUnit test for updateEmployee method
+    @DisplayName("JUnit test for updateEmployee method")
+    @Test
+    public void givenEmployeeObject_whenUpdateEmployee_thenReturnUpdatedEmployee(){
+        // given - precondition or setup
+        given(employeeRepository.save(employee)).willReturn(employee);
+        employee.setEmail("ram@gmail.com");
+        employee.setFirstName("Ram");
+        // when -  action or the behaviour that we are going test
+        Employee updatedEmployee = employeeService.updateEmployee(employee);
+
+        // then - verify the output
+        assertThat(updatedEmployee.getEmail()).isEqualTo("ram@gmail.com");
+        assertThat(updatedEmployee.getFirstName()).isEqualTo("Ram");
+    }
+
+    @Disabled
+    // JUnit test for deleteEmployee method
+    @DisplayName("JUnit test for deleteEmployee method")
+    @Test
+    public void givenEmployeeId_whenDeleteEmployee_thenNothing(){
+        // given - precondition or setup
+        long employeeId = 1L;
+
+        willDoNothing().given(employeeRepository).deleteById(employeeId);
+
+        // when -  action or the behaviour that we are going test
+        employeeService.deleteEmployee(employeeId);
+
+        // then - verify the output
+        verify(employeeRepository, times(1)).deleteById(employeeId);
+    }
+}
+
+
+
+
+
+testing controller layer:
+----------------------
+
+package com.empapp.contoller;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+
+import com.empapp.model.Employee;
+import com.empapp.service.EmployeeService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@WebMvcTest
+public class EmployeeControllerTests {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private EmployeeService employeeService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Test
+    public void givenEmployeeObject_whenCreateEmployee_thenReturnSavedEmployee() throws Exception{
+
+        // given - precondition or setup
+        Employee employee = Employee.builder()
+                .firstName("rajeev")
+                .lastName("gupta")
+                .email("rgupta@gmail.com")
+                .build();
+        given(employeeService.saveEmployee(any(Employee.class)))
+                .willAnswer((invocation)-> invocation.getArgument(0));
+
+        // when - action or behaviour that we are going test
+        ResultActions response = mockMvc.perform(post("/api/employees")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(employee)));
+
+        // then - verify the result or output using assert statements
+        response.andDo(print()).
+                andExpect(status().isCreated())
+                .andExpect(jsonPath("$.firstName",
+                        is(employee.getFirstName())))
+                .andExpect(jsonPath("$.lastName",
+                        is(employee.getLastName())))
+                .andExpect(jsonPath("$.email",
+                        is(employee.getEmail())));
+
+    }
+
+    // JUnit test for Get All employees REST API
+    @Test
+    public void givenListOfEmployees_whenGetAllEmployees_thenReturnEmployeesList() throws Exception{
+        // given - precondition or setup
+        List<Employee> listOfEmployees = new ArrayList<>();
+        listOfEmployees.add(Employee.builder().firstName("rajeev").lastName("gupta").email("rgupta@gmail.com").build());
+        listOfEmployees.add(Employee.builder().firstName("Tony").lastName("Stark").email("tony@gmail.com").build());
+        given(employeeService.getAllEmployees()).willReturn(listOfEmployees);
+
+        // when -  action or the behaviour that we are going test
+        ResultActions response = mockMvc.perform(get("/api/employees"));
+
+        // then - verify the output
+        response.andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.size()",
+                        is(listOfEmployees.size())));
+
+    }
+
+    // positive scenario - valid employee id
+    // JUnit test for GET employee by id REST API
+    @Test
+    public void givenEmployeeId_whenGetEmployeeById_thenReturnEmployeeObject() throws Exception{
+        // given - precondition or setup
+        long employeeId = 1L;
+        Employee employee = Employee.builder()
+                .firstName("rajeev")
+                .lastName("gupta")
+                .email("rgupta@gmail.com")
+                .build();
+        given(employeeService.getEmployeeById(employeeId)).willReturn(Optional.of(employee));
+
+        // when -  action or the behaviour that we are going test
+        ResultActions response = mockMvc.perform(get("/api/employees/{id}", employeeId));
+
+        // then - verify the output
+        response.andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.firstName", is(employee.getFirstName())))
+                .andExpect(jsonPath("$.lastName", is(employee.getLastName())))
+                .andExpect(jsonPath("$.email", is(employee.getEmail())));
+
+    }
+
+    // negative scenario - valid employee id
+    // JUnit test for GET employee by id REST API
+    @Test
+    public void givenInvalidEmployeeId_whenGetEmployeeById_thenReturnEmpty() throws Exception{
+        // given - precondition or setup
+        long employeeId = 1L;
+         Employee employee = Employee.builder()
+                .firstName("rajeev")
+                .lastName("gupta")
+                .email("rgupta@gmail.com")
+                .build();
+        given(employeeService.getEmployeeById(employeeId)).willReturn(Optional.empty());
+
+        // when -  action or the behaviour that we are going test
+        ResultActions response = mockMvc.perform(get("/api/employees/{id}", employeeId));
+
+        // then - verify the output
+        response.andExpect(status().isNotFound())
+                .andDo(print());
+
+    }
+    // JUnit test for update employee REST API - positive scenario
+        @Test
+        public void givenUpdatedEmployee_whenUpdateEmployee_thenReturnUpdateEmployeeObject() throws Exception{
+            // given - precondition or setup
+            long employeeId = 1L;
+            Employee savedEmployee = Employee.builder()
+            	    .firstName("rajeev")
+                    .lastName("gupta")
+                    .email("rgupta@gmail.com")
+                    .build();
+
+            Employee updatedEmployee = Employee.builder()
+                    .firstName("Ram")
+                    .lastName("Jadhav")
+                    .email("ram@gmail.com")
+                    .build();
+            given(employeeService.getEmployeeById(employeeId)).willReturn(Optional.of(savedEmployee));
+            given(employeeService.updateEmployee(any(Employee.class)))
+                    .willAnswer((invocation)-> invocation.getArgument(0));
+
+            // when -  action or the behaviour that we are going test
+            ResultActions response = mockMvc.perform(put("/api/employees/{id}", employeeId)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(updatedEmployee)));
+
+
+            // then - verify the output
+            response.andExpect(status().isOk())
+                    .andDo(print())
+                    .andExpect(jsonPath("$.firstName", is(updatedEmployee.getFirstName())))
+                    .andExpect(jsonPath("$.lastName", is(updatedEmployee.getLastName())))
+                    .andExpect(jsonPath("$.email", is(updatedEmployee.getEmail())));
+        }
+
+    // JUnit test for update employee REST API - negative scenario
+    @Test
+    public void givenUpdatedEmployee_whenUpdateEmployee_thenReturn404() throws Exception{
+        // given - precondition or setup
+        long employeeId = 1L;
+        Employee savedEmployee = Employee.builder()
+        	    .firstName("rajeev")
+                .lastName("gupta")
+                .email("rgupta@gmail.com")
+                .build();
+
+        Employee updatedEmployee = Employee.builder()
+                .firstName("Ram")
+                .lastName("Jadhav")
+                .email("ram@gmail.com")
+                .build();
+        given(employeeService.getEmployeeById(employeeId)).willReturn(Optional.empty());
+        given(employeeService.updateEmployee(any(Employee.class)))
+                .willAnswer((invocation)-> invocation.getArgument(0));
+
+        // when -  action or the behaviour that we are going test
+        ResultActions response = mockMvc.perform(put("/api/employees/{id}", employeeId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatedEmployee)));
+
+        // then - verify the output
+        response.andExpect(status().isNotFound())
+                .andDo(print());
+    }
+
+// JUnit test for delete employee REST API
+    @Test
+    public void givenEmployeeId_whenDeleteEmployee_thenReturn200() throws Exception{
+        // given - precondition or setup
+        long employeeId = 1L;
+        willDoNothing().given(employeeService).deleteEmployee(employeeId);
+
+        // when -  action or the behaviour that we are going test
+        ResultActions response = mockMvc.perform(delete("/api/employees/{id}", employeeId));
+
+        // then - verify the output
+        response.andExpect(status().isOk())
+                .andDo(print());
+    }
+}
+
+
+
+Integration test:
+------------------
+package com.empapp.integration;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+
+import com.empapp.model.Employee;
+import com.empapp.repository.EmployeeRepository;
+import com.empapp.service.EmployeeService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
+public class EmployeeControllerITests {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setup(){
+        employeeRepository.deleteAll();
+    }
+
+    @Test
+    public void givenEmployeeObject_whenCreateEmployee_thenReturnSavedEmployee() throws Exception{
+
+        // given - precondition or setup
+        Employee employee = Employee.builder()
+                .firstName("rajeev")
+                .lastName("gutpa")
+                .email("rgupta@gmail.com")
+                .build();
+
+        // when - action or behaviour that we are going test
+        ResultActions response = mockMvc.perform(post("/api/employees")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(employee)));
+
+        // then - verify the result or output using assert statements
+        response.andDo(print()).
+                andExpect(status().isCreated())
+                .andExpect(jsonPath("$.firstName",
+                        is(employee.getFirstName())))
+                .andExpect(jsonPath("$.lastName",
+                        is(employee.getLastName())))
+                .andExpect(jsonPath("$.email",
+                        is(employee.getEmail())));
+
+    }
+
+    // JUnit test for Get All employees REST API
+    @Test
+    public void givenListOfEmployees_whenGetAllEmployees_thenReturnEmployeesList() throws Exception{
+        // given - precondition or setup
+        List<Employee> listOfEmployees = new ArrayList<>();
+        listOfEmployees.add(Employee.builder().firstName("rajeev").lastName("gupta").email("rgupta@gmail.com").build());
+        listOfEmployees.add(Employee.builder().firstName("Tony").lastName("Stark").email("tony@gmail.com").build());
+        employeeRepository.saveAll(listOfEmployees);
+        // when -  action or the behaviour that we are going test
+        ResultActions response = mockMvc.perform(get("/api/employees"));
+
+        // then - verify the output
+        response.andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.size()",
+                        is(listOfEmployees.size())));
+
+    }
+
+    // positive scenario - valid employee id
+    // JUnit test for GET employee by id REST API
+    @Test
+    public void givenEmployeeId_whenGetEmployeeById_thenReturnEmployeeObject() throws Exception{
+        // given - precondition or setup
+        Employee employee = Employee.builder()
+        		 .firstName("rajeev")
+                 .lastName("gutpa")
+                 .email("rgupta@gmail.com")
+                .build();
+        employeeRepository.save(employee);
+
+        // when -  action or the behaviour that we are going test
+        ResultActions response = mockMvc.perform(get("/api/employees/{id}", employee.getId()));
+
+        // then - verify the output
+        response.andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.firstName", is(employee.getFirstName())))
+                .andExpect(jsonPath("$.lastName", is(employee.getLastName())))
+                .andExpect(jsonPath("$.email", is(employee.getEmail())));
+
+    }
+
+    // negative scenario - valid employee id
+    // JUnit test for GET employee by id REST API
+    @Test
+    public void givenInvalidEmployeeId_whenGetEmployeeById_thenReturnEmpty() throws Exception{
+        // given - precondition or setup
+        long employeeId = 1L;
+        Employee employee = Employee.builder()
+        		 .firstName("rajeev")
+                 .lastName("gutpa")
+                 .email("rgupta@gmail.com")
+                .build();
+        employeeRepository.save(employee);
+
+        // when -  action or the behaviour that we are going test
+        ResultActions response = mockMvc.perform(get("/api/employees/{id}", employeeId));
+
+        // then - verify the output
+        response.andExpect(status().isNotFound())
+                .andDo(print());
+
+    }
+
+    // JUnit test for update employee REST API - positive scenario
+    @Test
+    public void givenUpdatedEmployee_whenUpdateEmployee_thenReturnUpdateEmployeeObject() throws Exception{
+        // given - precondition or setup
+         Employee employee = Employee.builder()
+                .firstName("rajeev")
+                .lastName("gupta")
+                .email("rgupta@gmail.com")
+                .build();
+        employeeRepository.save(savedEmployee);
+
+        Employee updatedEmployee = Employee.builder()
+                .firstName("Ram")
+                .lastName("Jadhav")
+                .email("ram@gmail.com")
+                .build();
+
+        // when -  action or the behaviour that we are going test
+        ResultActions response = mockMvc.perform(put("/api/employees/{id}", savedEmployee.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatedEmployee)));
+
+
+        // then - verify the output
+        response.andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.firstName", is(updatedEmployee.getFirstName())))
+                .andExpect(jsonPath("$.lastName", is(updatedEmployee.getLastName())))
+                .andExpect(jsonPath("$.email", is(updatedEmployee.getEmail())));
+    }
+
+    // JUnit test for update employee REST API - negative scenario
+    @Test
+    public void givenUpdatedEmployee_whenUpdateEmployee_thenReturn404() throws Exception{
+        // given - precondition or setup
+        long employeeId = 1L;
+        Employee savedEmployee = Employee.builder()
+        		 .firstName("rajeev")
+                 .lastName("gutpa")
+                 .email("rgupta@gmail.com")
+                .build();
+        employeeRepository.save(savedEmployee);
+
+        Employee updatedEmployee = Employee.builder()
+                .firstName("Ram")
+                .lastName("Jadhav")
+                .email("ram@gmail.com")
+                .build();
+
+        // when -  action or the behaviour that we are going test
+        ResultActions response = mockMvc.perform(put("/api/employees/{id}", employeeId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatedEmployee)));
+
+        // then - verify the output
+        response.andExpect(status().isNotFound())
+                .andDo(print());
+    }
+
+    // JUnit test for delete employee REST API
+    @Test
+    public void givenEmployeeId_whenDeleteEmployee_thenReturn200() throws Exception{
+        // given - precondition or setup
+        Employee savedEmployee = Employee.builder()
+        		 .firstName("rajeev")
+                 .lastName("gutpa")
+                 .email("rgupta@gmail.com")
+                .build();
+        employeeRepository.save(savedEmployee);
+
+        // when -  action or the behaviour that we are going test
+        ResultActions response = mockMvc.perform(delete("/api/employees/{id}", savedEmployee.getId()));
+
+        // then - verify the output
+        response.andExpect(status().isOk())
+                .andDo(print());
+    }
+
+
+}

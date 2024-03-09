@@ -1,0 +1,383 @@
+
+Bank application:
+-----------------
+
+web<======>service<=====> persistance layer<===>DB
+
+
+
+Step 1: create db table and populate some record:
+---------------------------------------------------
+
+create table Account (id integer not null auto_increment, balance double precision not null, name varchar(255), primary key (id));
+insert into Account (balance, name) values (100, "A");
+insert into Account (balance, name) values (100, "B");
+
+
+
+
+
+step 2: create DAO layer:
+----------------------------
+com.bankapp.model.perstance
+
+
+@Entity
+public class Account {
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private int id;
+	private String name;
+	private double balance;
+
+}
+
+
+
+public interface AccountDao {
+	public void update(Account account);
+	public Account find(int id);
+}
+
+
+
+@Repository
+public class AccountDaoImp implements AccountDao {
+
+	@PersistenceContext
+	private EntityManager em;
+
+	@Override
+	public void update(Account account) {
+		em.merge(account);
+	}
+
+	@Override
+	public Account find(int id) {
+		return em.find(Account.class, id);
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+step 3: create service layer:
+-------------------------------
+
+first defining cross cutting concerns:
+-------------------------------------
+com.bankapp.model.service.advices
+
+
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Loggable {
+
+}
+
+CREATE TABLE Record (
+     id int NOT NULL AUTO_INCREMENT,
+     from int NOT NULL,
+     to int NOT NULL,
+     PRIMARY KEY (id)
+);
+
+
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+@Component
+@Aspect
+public class MethodLogger {
+	private static final Logger logger=LoggerFactory.getLogger(MethodLogger.class); 
+	
+  @Around("@annotation(Loggable)")
+  public Object around(ProceedingJoinPoint point) throws Throwable {
+    long start = System.currentTimeMillis();
+    Object result = point.proceed();
+    logger.info("start "+MethodSignature.class.cast(point.getSignature()).getMethod().getName()+" is called"+" takes " +(System.currentTimeMillis() - start));
+    return result;
+  }
+}
+
+
+
+
+
+Now defining business methods:
+------------------------------
+com.bankapp.model.service
+
+
+
+public interface AccountService {
+	public void transfer(int from, int to, int amout);
+	public void deposit(int id, double amount);
+	public Account getAccount(int id);
+}
+
+
+
+
+@Service
+@Transactional
+public class AccountServiceImp implements AccountService {
+	
+		@Autowired
+		private AccountDao accountDao;
+		
+		public void setAccountDao(AccountDao accountDao) {
+			this.accountDao = accountDao;
+		}
+	
+		
+		@Loggable
+		@Override
+		public void transfer(int from, int to, int amout) {
+			Account fromAccount=accountDao.find(from);
+			Account toAccount=accountDao.find(to);
+			
+			fromAccount.setBalance(fromAccount.getBalance()-amout);
+			toAccount.setBalance(toAccount.getBalance()+amout);
+			
+			accountDao.update(fromAccount);
+			accountDao.update(toAccount);
+		}
+	
+		@Override
+		public void deposit(int id, double amount) {
+			Account account=accountDao.find(id);
+			account.setBalance(account.getBalance()+amount);
+			accountDao.update(account);
+		}
+	
+		@Override
+		public Account getAccount(int id) {
+			// TODO Auto-generated method stub
+			return accountDao.find(id);
+		}
+	
+	}
+
+
+
+
+
+glue all:
+---------
+<mvc:annotation-driven />
+	<context:component-scan base-package="com" />
+
+	<!-- CONFIG INTERNAL RESO BEAN RESOLVER -->
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix">
+			<value>/WEB-INF/views/</value>
+		</property>
+		<property name="suffix">
+			<value>.jsp</value>
+		</property>
+	</bean>
+
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://localhost:3306/yms" />
+		<property name="username" value="root" />
+		<property name="password" value="root" />
+	</bean>
+
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan">
+			<list>
+				<value>com.app.model.dao</value>
+			</list>
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.format_sql">true</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+
+
+
+
+
+best practice 
+-------------------
+db.properties
+-------------------
+jdbc.driverClassName=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/foo
+jdbc.username=root
+jdbc.password=root
+
+
+
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations" value="classpath:db.properties"></property>
+	</bean>
+
+
+
+
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+	</bean>
+
+
+
+
+
+testing application in main:
+---------------------------
+
+		ApplicationContext ctx=new ClassPathXmlApplicationContext("beans.xml");
+		AccountService s=ctx.getBean("accountServiceImp", AccountService.class);
+		s.transfer(1, 2, 10);
+
+
+
+
+
+
+Now let convert it to web application:
+-------------------------------------
+
+
+first configure fc:
+---------------------
+
+ 	<servlet>
+	    <servlet-name>dispatcher</servlet-name>
+	    <servlet-class>
+	        org.springframework.web.servlet.DispatcherServlet
+	    </servlet-class>
+	    <init-param>
+	        <param-name>contextConfigLocation</param-name>
+	        <param-value>/WEB-INF/spring-servlet.xml</param-value>
+	    </init-param>
+	    <load-on-startup>1</load-on-startup>
+	 </servlet>
+	 
+	 <servlet-mapping>
+	    <servlet-name>dispatcher</servlet-name>
+	    <url-pattern>/</url-pattern>
+	 </servlet-mapping>
+
+
+
+create configuration file:
+--------------------------
+
+
+	
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix">
+			<value>/WEB-INF/views/</value>
+		</property>
+		<property name="suffix">
+			<value>.jsp</value>
+		</property>
+	</bean>
+
+</beans>
+
+
+
+
+
+com.bankapp.controllers
+
+
+//DTO
+
+public class AccountBean {
+	private int from;
+	private int to;
+	private double money;
+
+
+
+
+@Controller
+@RequestMapping(value="/transfer")
+public class AccountController {
+
+	@Autowired
+	private AccountService service;
+	
+	@RequestMapping(method=RequestMethod.GET)
+	public String showAccountTransferForm(ModelMap map){
+		
+		map.addAttribute("accountBean",new AccountBean());
+		return "accountform";
+	}
+	
+	@RequestMapping(method=RequestMethod.POST)
+	public ModelAndView submittedAccountTransferForm(AccountBean accountBean){
+	
+		service.transfer(accountBean.getFrom(), accountBean.getTo(), accountBean.getMoney());
+		return new ModelAndView("transfersuccess" ,"accountBean",accountBean);
+	}	
+}
+
+
+
+view layer:
+------------
+accountform.jsp
+-----------------
+
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"  %>
+
+<form:form action="transfer" method="post" commandName="accountBean">
+	Enter from account:<form:input path="from"/><br/>
+	Enter to amount:<form:input path="to"/><br/>
+	Enter money to transfer:<form:input path="money"/><br/>
+	<input type ="submit"/>
+</form:form>
+
+
+
+
+transfersuccess.jsp
+-----------------
+${accountBean.from }<br/>
+${accountBean.to }<br/>
+${accountBean.money }<br/>

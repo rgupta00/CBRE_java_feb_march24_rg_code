@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+
+	<bean id="telephoneDirectory" class="java.util.HashMap">
+		<constructor-arg>
+			<map>
+				<entry key="kishan" value="988373133"></entry>
+				<entry key="raj" value="9288778"></entry>
+			</map>
+		</constructor-arg>
+	</bean>
+
+
+	<bean id="telephoneDirectoryAccessor"
+		class="com.demo6.TelephoneDirectoryAccessor">
+		<property name="telephoneNumber"
+			value="#{telephoneDirectory['kishan']}"></property>
+	</bean>
+
+</beans>

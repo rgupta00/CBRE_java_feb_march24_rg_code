@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+
+	<bean id="rectangle" class="com.demo2.Rectangle">
+		<property name="length" value="20"></property>
+		<property name="width" value="10"></property>
+	</bean>
+
+	<bean id="peri" class="com.demo2.Perimeter">
+		<property name="perimeterValue" value="#{2*(rectangle.length+rectangle.width)}"/>
+	</bean>
+
+</beans>
