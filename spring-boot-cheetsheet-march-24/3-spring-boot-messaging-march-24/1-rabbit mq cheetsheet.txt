@@ -255,12 +255,15 @@ The message is sent to the admin queue.
 
 Fanout Exchange
 __________________
-The message is routed to all the available bounded queues. The routing key if provided is completely ignored. So this is a kind of publish-subscribe design pattern
+The message is routed to all the available bounded queues.
+ The routing key if provided is completely ignored. 
+ So this is a kind of publish-subscribe design pattern
 
 
 Create Queues named - marketingQueue, adminQueue, financeQueue
 Create a FanoutExchange named - fanout-exchange
-Create Bindings for each of the queue with the FanoutExchange. Also as this is a fanout exchange we do not need to specify a binding key.
+Create Bindings for each of the queue with the FanoutExchange.
+ Also as this is a fanout exchange we do not need to specify a binding key.
 
 
 
@@ -334,14 +337,16 @@ We send the message using the url -
 
 
 We do not need to specify the routing key here as message is published to all the queues.
-We can see that queues named marketingQueue, adminQueue and financeQueue are created. Also message has been sent to all the queues
+We can see that queues named marketingQueue, adminQueue and 
+financeQueue are created. Also message has been sent to all the queues
 
 
 
 Topic Exchange
 _____________
 
-Here again the routing key is made use of. But unlike in direct exchange type, here the routing key of the exchange and the bound queues should not necessarily be an exact match. Using regular expressions like wildcard we can send the exchange to multiple bound queues.
+Here again the routing key is made use of. But unlike in direct exchange type,
+ here the routing key of the exchange and the bound queues should not necessarily be an exact match. Using regular expressions like wildcard we can send the exchange to multiple bound queues.
 
 
 Modify the RabbitMQTopicConfig as follows-
@@ -564,20 +569,25 @@ Retry and Error Handling
 __________________________
 
 
-If exception still exists after maximum retries then put message in a dead letter queue where it can be analyzed and corrected later.
+If exception still exists after maximum retries then put message in a dead
+ letter queue where it can be analyzed and corrected later.
 
 What is a Dead Letter Queue?
 
-In English vocabulary Dead letter mail is an undeliverable mail that cannot be delivered to the addressee.
- A dead-letter queue (DLQ), sometimes which is also known as an undelivered-message queue, is a holding queue for messages that cannot be delivered to their destinations due to some reason or other.
+In English vocabulary Dead letter mail is an undeliverable mail that 
+cannot be delivered to the addressee.
+ A dead-letter queue (DLQ), sometimes which is also known as an undelivered-message queue,
+ is a holding queue for messages that cannot be delivered to their destinations due to some reason or other.
 
-In message queueing the dead letter queue is a service implementation to store messages that meet one or more of the following failure criteria:
+In message queueing the dead letter queue is a service implementation to
+ store messages that meet one or more of the following failure criteria:
 
 Message that is sent to a queue that does not exist.
 Queue length limit exceeded.
 Message length limit exceeded.
 Message is rejected by another queue exchange.
-Message reaches a threshold read counter number, because it is not consumed. Sometimes this is called a "back out queue".
+Message reaches a threshold read counter number, because it is not consumed.
+ Sometimes this is called a "back out queue".
 
 
 Order management application : consumer should reject the order if order id is absent:

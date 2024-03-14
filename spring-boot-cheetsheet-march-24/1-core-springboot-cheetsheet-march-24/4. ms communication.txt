@@ -45,6 +45,8 @@ String productString=restTemplate.getForObject("http://localhost:8082/productapp
 
 getting all products:
 ________________
+https://stackoverflow.com/questions/23674046/get-list-of-json-objects-with-spring-resttemplate
+
 List products = restTemplate.getForObject("http://localhost:8082/productapp/products", List.class);
 
 
@@ -132,6 +134,9 @@ step 2: Apply @EnableFeignClients to bootstrap class
 @EnableFeignClients("com.product.model.service")
 @SpringBootApplication
 public class ProductApplication  {
+}
+
+
 
 step 3: create ProductServiceProxy
 

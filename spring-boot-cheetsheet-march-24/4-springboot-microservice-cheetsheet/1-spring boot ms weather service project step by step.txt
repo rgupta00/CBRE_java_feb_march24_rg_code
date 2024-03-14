@@ -1,0 +1,1103 @@
+Spring boot microserivice:
+===================================
+Weatherservice and weatherclient application
+
+
+Spring boot tools and technologies:
+----------------------------
+* Eureka server
+* Open Feign
+* Ribbon/Spring cloud load balancer
+* Resilence4j/Hystric
+* spring cloud gateway
+* Spring cloud config server 
+* ELK
+* Spring boot grafana and prometheus
+* Sluth and zipkin
+
+used tech:
+spring boot & Spring cloud
+
+Step 1: Configure eureaka server
+Step 2: Create Weatherservice application
+Step 3: Create weatherclient application
+Step 4: adding resilence4j to weatherclient application
+Step 5: Create spring cloud gateway server configuration
+Step 6: Understanding Concept of filter and interceptor spring boot
+Step 7: Applying custom interceptor with spring cloud config server
+Step 8: Applying security to spring cloud gateway
+
+
+
+
+
+Ports:
+------
+weatherclient: 8085
+Weatherservice: 8082, 8083
+eureaka:8761
+api gateway: 8080
+auth server: 9090
+config server: 8888
+
+urls:
+------
+http://localhost:8761
+http://localhost:8761/eureka/apps
+
+
+spring boot logging
+==================
+Disable logging :
+---------------
+logging.level.root=OFF
+logging.level.org.springframework.boot=OFF
+spring.main.banner-mode=OFF   
+    
+Customizing logging :
+---------------	     
+logging.level.com.productapp=info
+
+logging.level.org.springframework.web: DEBUG
+logging.level.org.hibernate: ERROR
+
+logging.file.name=/home/raj/Desktop/logs/server.log
+
+
+Spring boot actuator
+====================
+management.endpoints.web.exposure.include=*
+management.endpoints.jmx.exposure.include=*
+management.endpoints.web.base-path=/productapp
+management.endpoint.shutdown.enabled=true
+management.endpoint.health.show-details= always
+
+URL
+-------------------
+eureka:
+http://localhost:8761
+http://localhost:8761/eureka/apps
+
+Weatherservice:
+http://localhost:8082/wservice/weatherinfo/24
+
+weatherclient:
+http://localhost:8085/wclient/weatherclient/24
+
+Observe the circuitbreakers:
+http://localhost:8085/wclient/actuator/health
+
+Calling with api gateway:
+http://localhost:8080/wclient/weatherclient/24
+
+
+
+Step 1: create eureaka:8761
+----------------------------
+apply annotation on config class
+
+@EnableEurekaServer
+
+application.yml
+---------------
+server:
+  port: 8761
+spring:
+  application:
+    name: eureka
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+
+
+
+Step 2: create Weatherservice project 
+---------------------------------------
+choose : web, eureaka client,actuator
+
+@Service
+public class WeatherService {
+
+    @Value("${server.port}")
+    private int  portNumber;
+
+    public String getWeatherInfo(int temp){
+        String weatherInfo="";
+        if(temp>=40)
+            weatherInfo="too hot to go outside";
+        else if (temp >= 30)
+            weatherInfo="ok to go outside but take care";
+        else if (temp >= 18)
+            weatherInfo="why not go outside and enjoy";
+        else
+            weatherInfo="too cold to go outside";
+
+        return weatherInfo+ ": "+portNumber;
+    }
+}
+
+@RestController
+public class WeatherServiceController {
+
+    @Autowired
+    private WeatherService weatherService;
+
+    @GetMapping(path="weatherinfo/{temp}")
+    public String getWeatherInfo(@PathVariable int temp){
+        return weatherService.getWeatherInfo(temp);
+    }
+}
+
+
+server:
+  port: 8082
+  servlet:
+    context-path: /wservice
+spring:
+  application:
+    name: wservice
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+		
+
+running endpoint
+-----------------
+http://localhost:8082/wservice/weatherinfo/24
+
+
+
+
+
+Step 3: create Weatherclient project 
+---------------------------------------
+choose : web, eureaka client,actuator
+
+
+@RestController
+public class WeatherServiceClientController {
+    @Autowired
+    private WeatherClientService weatherClientService;
+
+    @GetMapping(path = "weatherclient/{temp}")
+    public String weatherClient(@PathVariable int temp){
+        return "client :"+  weatherClientService.getWeatherInfo(temp);
+    }
+
+}
+
+@Service
+public class WeatherClientService {
+
+	@LoadBalanced
+    @Autowired
+    private RestTemplate restTemplate;
+
+    public String getWeatherInfo(int temp){
+    
+       return restTemplate.getForObject("http://WEATHER-SERVICE/wservice/weatherinfo/"+ temp, String.class);
+    }
+}
+
+server:
+  port: 8085
+  servlet:
+    context-path: /wclient
+spring:
+  application:
+    name:  wclient
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    registry-fetch-interval-seconds: 10
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+
+running endpoint:
+------------------
+http://localhost:8085/wclient/weatherclient/24
+
+
+
+
+
+
+Step 4: Applying resilance4j: fault tolerence
+---------------------------------------
+add :resilance4j to wclient application
+
+fallback logic to the controller:
+-----------------
+
+    @CircuitBreaker(fallbackMethod = "fallBackLogic", name = "weatherservice")
+    @GetMapping(path = "weatherclient/{temp}")
+    public String weatherClient(@PathVariable int temp){
+        return "client :"+  weatherClientService.getWeatherInfo(temp);
+    }
+
+    public String fallBackLogic(Exception e){
+        System.out.println("****************************");
+        System.out.println(e);
+        System.out.println("****************************");
+        return "weather is ok ok";
+    }
+
+
+
+#eureka.client.registryFetchIntervalSeconds=5
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      weatherservice:
+        register-health-indicator: true
+        event-consumer-buffer-size: 10
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-size: 10
+        sliding-window-type: count_based
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoint:
+    health:
+      show-details: always
+
+
+Observe the circuitbreakers design pattern:
+
+http://localhost:8085/wclient/actuator/health
+
+
+
+Spring boot config server:
+-------------------------
+
+application.yaml
+-------------------
+
+spring:
+  profiles:
+    active:
+      - qa
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    shutdown:
+      enabled: true
+  info:
+    env:
+      enabled: true
+build:
+  version: "1.0"
+info:
+  message: "Welcome to busycoder weather default profile"
+  name: "Raj: Product Owner weather default profile"
+
+application-prod.yml
+---------------------
+build:
+  version: "2.0"
+info:
+  message: "Welcome to busycoder weather dev profile"
+  name: "Ravi: Product Owner weather dev profile"
+  
+application-qa.yml
+---------------------
+build:
+  version: "2.0"
+info:
+  message: "Welcome to busycoder weather qa profile"
+  name: "Tarun: Product Owner weather  qa profile"
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@ConfigurationProperties(prefix = "info")
+public class AppInfoDto {
+    private String message;
+    private String name;
+}
+
+@EnableConfigurationProperties(AppInfoDto.class)
+
+step 4: create config server:
+--------------------------
+Choose : lombok,config server,actuator, eurka client
+
+apply 
+-----
+@EnableConfigServer to the bootstrap class
+
+application.yml
+----------------
+server:
+  port: 8888
+spring:
+  application:
+    name: configserver
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:///C:/configfiles2
+          clone-on-start: true
+          default-label: master
+
+
+now try:
+---------
+http://localhost:8888/wclient/default
+http://localhost:8888/wservice/default
+
+
+
+Step 5: read property files from config server
+-----------------------------------------------
+1. change in every project add: config client dependency
+
+2. now add configuration
+spring:
+  config:
+    import: optional:configserver:http://localhost:8888
+	
+http://localhost:8080/appInfo
+
+3. what if config property changes?
+
+@RefreshScope on top of the restcontroller
+
+in client application use refresh endpoint
+
+http://localhost:8080/actuator/refresh
+
+
+
+
+
+
+
+Step 5: Spring cloud gateway (Zuul api gateway is deprecated )
+-----------------------------------------------------------
+Create a project with dependencies
+Choose : eureka client, actuator, gateway (check for maven repo)
+
+<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-gateway</artifactId>
+</dependency>
+		
+Apply annotation :@EnableDiscoveryClient
+
+
+application.yml
+-----------------
+server:
+  port: 8099
+spring:
+  application:
+    name: apigateway
+  cloud:
+    gateway:
+      routes:
+        - id: wservice-id
+          uri: lb://WEATHER-SERVICE
+          predicates:
+            - Path=/wservice/**
+
+        - id: wclient-id
+          uri: lb://WEATHER-CLIENT
+          predicates:
+            - Path=/wclient/**
+        
+eureka:
+  client:
+    registry-fetch-interval-seconds: 10
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+
+	  
+	  
+	  
+Step 6: Understanding Concept of filter and interceptor spring boot
+---------------------------------------------------------------------
+https://www.baeldung.com/spring-mvc-handlerinterceptor-vs-filter
+
+Understanding filter and interceptor
+-------------------------------
+
+@RestController
+public class HelloController {
+
+    @GetMapping(path = "hello")
+    public String hello(){
+        return "hello endpoint";
+    }
+
+    @GetMapping(path = "hello2")
+    public String hello2(){
+        return "hello2 endpoint";
+    }
+
+    @GetMapping(path = "hello2/pqr")
+    public String hello2Nested2(){
+        return "hello2/pqr endpoint";
+    }
+
+    @GetMapping(path = "hello2/bca")
+    public String hello2Nested(){
+        return "hello2/bca endpoint";
+    }
+
+    @GetMapping(path = "hello3")
+    public String hello3(){
+        return "hello3 endpoint";
+    }
+
+}
+
+
+@Component
+@Order(1)
+public class Filter1 implements Filter {
+    public Filter1() {
+    }
+
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        Filter.super.init(filterConfig);
+        System.out.println("init is called filter 1");
+    }
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
+
+        System.out.println("i am running with every request...filter 1");
+        HttpServletRequest req= (HttpServletRequest) servletRequest;
+
+        String uri=req.getRequestURI();
+        System.out.println("uri req: "+ uri);
+        filterChain.doFilter(servletRequest, servletResponse);
+    }
+
+    @Override
+    public void destroy() {
+        System.out.println("dest is called filter1");
+    }
+}
+
+@Configuration
+public class FilterConfig {
+    //u need to register the filter with spring mvc
+   // FilterRegistrationBean
+    @Bean
+    public FilterRegistrationBean<Filter1> regiserFilter1(){
+        FilterRegistrationBean<Filter1> registrationBeans=new FilterRegistrationBean<Filter1>();
+        registrationBeans.setFilter(new Filter1());
+        registrationBeans.addUrlPatterns("/hello2/*");//Why it is running for all api endpoints
+        return registrationBeans;
+    }
+}
+
+
+@Component
+public class GenericInterceptor implements HandlerInterceptor {
+    @Override
+    public boolean preHandle(
+            HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // You can do your processing here
+        System.out.println("GenericInterceptor preHandle is called");
+        return true;
+    }
+    @Override
+    public void postHandle(
+            HttpServletRequest request, HttpServletResponse response, Object handler,
+            ModelAndView modelAndView) throws Exception {
+        System.out.println("GenericInterceptor postHandle is called");
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
+                                Object handler, Exception exception) throws Exception {
+        System.out.println("GenericInterceptor afterCompletion is called");
+    }
+}
+
+
+@Component
+public class SpecificInterceptor implements HandlerInterceptor {
+    @Override
+    public boolean preHandle(
+            HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // You can do your processing here
+        System.out.println("SpecificInterceptor preHandle is called");
+        return true;
+    }
+    @Override
+    public void postHandle(
+            HttpServletRequest request, HttpServletResponse response, Object handler,
+            ModelAndView modelAndView) throws Exception {
+        System.out.println("SpecificInterceptor postHandle is called");
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
+                                Object handler, Exception exception) throws Exception {
+        System.out.println("SpecificInterceptor afterCompletion is called");
+    }
+}
+
+
+@Configuration
+public class InterceptorConfig implements WebMvcConfigurer {
+
+    @Autowired
+    private SpecificInterceptor specificInterceptor;
+
+    @Autowired
+    private GenericInterceptor genericInterceptor;
+
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        //i need to register my intercepor
+
+        registry.addInterceptor(genericInterceptor).order(1);
+        registry.addInterceptor(specificInterceptor)
+                .addPathPatterns("/hello2/**")
+                .order(2)
+                .excludePathPatterns("/hello2/pqr");
+
+    }
+}
+
+
+Now run spring security authserver project and try endpoints
+-------------------------------------------------------------
+register new user:
+http://localhost:9092/authserver/register
+
+Authenticate new user get token for new user:
+http://localhost:9092/authserver/authenticate
+
+{
+ "username":"raj",
+ "password":"raj123"
+}
+
+now try to validate the token:
+-----------------------------
+http://localhost:9092/authserver/validate?token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmb28iLCJpYXQiOjE3MDk2MTMwNTMsImV4cCI6MTcwOTYxNDg1M30.qijj-HbAzD4i0Dj2-cATDpfo_6VGmpBsv_8GXXOAobQ
+
+
+Creating global filter for spring cloud gateway:
+----------------------------------------
+2 kind of filter that u can use with api gateway , reactive way of programming
+* global filter
+* filter for specific routes: AbstractGatewayFilterFactory
+
+
+Apply GlobalFilter with api gateway, no need to config in yaml file
+-------------------------------------------------------------------
+@Component
+public class MyGlobalFiter implements GlobalFilter , Ordered {
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        System.out.println("------------inside global fiter of api gateway-----------------");
+         var requestWithHeader= exchange.getRequest().mutate()
+                .header("weatherappfilter1","weather app global fitler value")
+                .build();
+        return chain.filter(exchange.mutate().request(requestWithHeader).build());
+    }
+
+    @Override
+    public int getOrder() {
+        return -1;
+    }
+}
+
+
+Now we are going to accept "weatherapifilter" header in any microservice:
+
+  @GetMapping(path = "weatherclient/{temp}")
+    public String weatherClient(@PathVariable int temp, @RequestHeader(name = "weatherapifilter") String weatherapifilter){
+        System.out.println("---------------------------------");
+        System.out.println(weatherapifilter);
+    }
+
+
+
+Applying custom interceptor with spring cloud config server
+------------------------------------------------------------
+@Service
+public class WeatherAppPreFilter extends AbstractGatewayFilterFactory<WeatherAppPreFilter.Config> {
+
+    public WeatherAppPreFilter(){
+        super(Config.class);
+    }
+    @Override
+    public GatewayFilter apply(Config config) {
+        return ( exchange,  chain)-> {
+                System.out.printf("*****WeatherAppPreFilter******");
+            var requestWithHeader= exchange.getRequest().mutate()
+                    .header("myheader","this is some sec token")
+                    .build();
+                return chain.filter(exchange.mutate().request(requestWithHeader).build());
+        };
+    }
+
+    public static class Config{
+    }
+}
+
+With filter for specific routes: AbstractGatewayFilterFactory filter:
+---------------          
+server:
+  port: 8099
+spring:
+  application:
+    name: apigateway-server
+  cloud:
+    gateway:
+      routes:
+        - id: wservice-id
+          uri: lb://WEATHER-SERVICE
+          predicates:
+            - Path=/wservice/**
+          filters:
+            - name: WeatherAppPreFilter
+
+        - id: wclient-id
+          uri: lb://WEATHER-CLIENT
+          predicates:
+            - Path=/wclient/**
+          filters:
+            - name: WeatherAppPreFilter
+eureka:
+  client:
+    registry-fetch-interval-seconds: 10
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+
+
+
+
+
+Step 8: Applying security to spring cloud gateway
+
+Now we need to use authserver help to authenticate every
+request so that unauthorized user should not access
+api
+
+
+Step 1: add jar to validate the token obtain from auth server
+<!--jar for jwt toekn validation-->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.11.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.11.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.11.5</version>
+		</dependency>
+		
+		
+Step 2: we need util to validate the token
+---------------------------------------------
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.stereotype.Component;
+
+import java.security.Key;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+@Component
+public class JwtService {
+    public static final String
+            SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
+
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts
+                .parserBuilder()
+                .setSigningKey(getSignKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    private Boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    public void validateToken(final String token) {
+        Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token);
+    }
+
+    private Key getSignKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+}
+
+
+Step 3: list of rountes need to ignore
+-------------------------------------
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.function.Predicate;
+
+@Component
+public class RouteExeptions {
+    public static final List<String> endPoints=
+            List.of("/authserver/validate",
+            "/authserver/authenticate",
+            "/authserver/register","/eureka");
+
+    //Predicate is a funcational interface in java 8 what it does
+    //if req if notmataching of any of abouve url then retrun true
+    public Predicate<ServerHttpRequest> isSecured=
+             req-> endPoints.stream().noneMatch(uri->req.getURI().getPath().contains(uri));
+}
+
+
+Step 4: We need to design AuthenticationFilter
+---------------------------------------
+
+import com.apigateway.util.JwtService;
+import com.apigateway.util.RouteExeptions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+
+@Component
+public class AuthenticationFilter  extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
+
+    @Autowired
+    private RouteExeptions routeExeptions;
+
+    @Autowired
+    private JwtService jwtService;
+
+    public AuthenticationFilter(){
+        super(Config.class);
+    }
+
+    @Override
+    public GatewayFilter apply(Config config) {
+        return ( exchange,  chain)-> {
+            String authHeader=null;
+            if(routeExeptions.isSecured.test(exchange.getRequest())){
+                    //header container token or not
+                if(!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)){
+                    throw new RuntimeException("missing header information");
+                }
+                 authHeader=exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
+                if(authHeader!=null && authHeader.startsWith("Bearer ")){
+                    authHeader=authHeader.substring(7) ;
+                }
+            }
+        //i can call auth server
+                try{
+                    jwtService.validateToken(authHeader);
+                }catch (Exception e){
+                    throw new RuntimeException("invalid token");
+                }
+
+                return chain.filter(exchange);
+
+        };
+    }
+
+    public static class Config{
+    }
+}
+
+
+step 5: apply  AuthenticationFilter to every request
+----------------------------------------------------
+
+          filters:
+            - name: AuthenticationFilter
+			
+			
+			
+			
+
+
+
+8. Spring boot grafana and prometheus
+----------------------------------------
+
+Prometheus: Hello world configuration:
+__________________________________
+
+Step 1: create spring boot application with actuator, and prometheus dep
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		
+		
+		
+server:
+  port: 8080
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: "*"
+  endpoint:
+    prometheus:
+      enabled: true
+    metrics:
+      enabled: true		
+		
+		
+
+step 2: download sw
+
+Download and configure Prometheus: run on port : 9090
+https://prometheus.io/download/
+
+download grafana:
+wget https://dl.grafana.com/enterprise/release/grafana-enterprise-9.5.2.linux-amd64.tar.gz
+
+
+Step 3: configure spring boot application monitoring to  Prometheus:
+	search google (configure prometheus to monitor itself)
+	
+	
+prometheus.yml
+-----------------
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+    monitor: 'codelab-monitor'
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['localhost:9090']
+ 
+  - job_name: 'spring-actuator'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 5s
+    static_configs:
+    - targets: ['localhost:8080']
+    
+    
+Start prometheus
+./prometheus 
+
+4.start grafana:
+ bin/grafana-server
+ http://localhost:9090
+up
+
+grafana dashboard
+http://localhost:3000/
+
+Dashboard-> new import -> grafana dashboard id -->put that id---> ui is created
+
+	 search google SpringBoot APM Dashboard
+
+
+
+
+
+9. Exploring Distributed Tracing with Spring Boot 3, Zipkin, and Micrometer
+------------------------------------------------------------------
+
+https://micrometer.io/
+https://medium.com/go-city/micrometer-tracing-and-spring-cloud-sleuth-compatibility-e345c3c048b9
+https://spring.io/blog/2022/10/12/observability-with-spring-boot-3
+
+What is micrometer?
+
+Vendor-neutral application observability facade
+	Micrometer provides a facade for the most popular observability systems
+	allowing you to instrument your JVM-based application code without vendor lock-in.
+	Think SLF4J, but for observability.
+
+great artical:
+https://www.splunk.com/en_us/blog/learn/observability-vs-monitoring-vs-telemetry.html
+https://openvalue.blog/posts/2022/12/16/tracing-in-spring-boot-2-and-3/
+
+Example :
+step 1: run wservice and wclient application with logging
+
+http://localhost:8082/wservice/weatherinfo/24
+http://localhost:8085/wclient/weatherclient/24
+
+
+Step 2: add dependencies to both projects
+<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-brave</artifactId>
+			<version>1.1.5</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.zipkin.reporter2</groupId>
+			<artifactId>zipkin-reporter-brave</artifactId>
+			<version>2.16.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.loki4j</groupId>
+			<artifactId>loki-logback-appender</artifactId>
+			<version>1.4.1</version>
+		</dependency>
+		
+		
+step 3: update properties
+
+spring:
+  application:
+    name:  "wclient"
+  logging:
+    pattern:
+      level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+			
+step 4: apply @Obsered annotation to both controller api methods
+
+    @Observed(
+            name = "user.name",
+            contextualName = "WeatherServiceClientController-->weatherClientService",
+            lowCardinalityKeyValues = {"userType", "userType2"}
+    )
+	
+	
+step 5: start zipkin and go to dish board
+docker run -d -p 9411:9411 openzipkin/zipkin
+
+
+step 6: look for span id
+
+
+
+    
+    
+		
+		
+
+
+
