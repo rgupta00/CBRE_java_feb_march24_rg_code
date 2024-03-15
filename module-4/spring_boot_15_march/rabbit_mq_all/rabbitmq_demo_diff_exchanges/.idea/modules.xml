@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/demo/demo.iml" filepath="$PROJECT_DIR$/demo/demo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/rabbitmq_demo_diff_ex.iml" filepath="$PROJECT_DIR$/.idea/rabbitmq_demo_diff_ex.iml" />
+      <module fileurl="file://$PROJECT_DIR$/rabbitmq_direct_exchange/rabbitmq_direct_exchange.iml" filepath="$PROJECT_DIR$/rabbitmq_direct_exchange/rabbitmq_direct_exchange.iml" />
+      <module fileurl="file://$PROJECT_DIR$/rabbitmq_fanout_exchange_3/rabbitmq_fanout_exchange_3.iml" filepath="$PROJECT_DIR$/rabbitmq_fanout_exchange_3/rabbitmq_fanout_exchange_3.iml" />
+      <module fileurl="file://$PROJECT_DIR$/rabbitmq_header_exchange_4/rabbitmq_header_exchange_4.iml" filepath="$PROJECT_DIR$/rabbitmq_header_exchange_4/rabbitmq_header_exchange_4.iml" />
+      <module fileurl="file://$PROJECT_DIR$/rabbitmq_topic_exchange_2/rabbitmq_topic_exchange_2.iml" filepath="$PROJECT_DIR$/rabbitmq_topic_exchange_2/rabbitmq_topic_exchange_2.iml" />
+    </modules>
+  </component>
+</project>

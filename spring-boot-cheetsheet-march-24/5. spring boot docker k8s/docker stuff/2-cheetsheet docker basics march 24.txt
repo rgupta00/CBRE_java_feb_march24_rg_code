@@ -3,7 +3,6 @@
 What is docker?
 _______________
 
-
 Docker containers wrap a  piece of software in a  complete filesystem that  
 contains everything needed to  run: code, runtime, system  tools, system libraries –  
 anything that can be installed  on a server. This guarantees 
@@ -12,7 +11,6 @@ anything that can be installed  on a server. This guarantees
 
 Why docker?
 ____________
-
 Developers use Docker to eliminate “works on my machine” problems  
 when collaborating on code with co-workers.
 
@@ -73,6 +71,8 @@ delete all docker existing iamages:
 
  docker rmi -f $(docker images -a -q)
 
+for window:
+https://stackoverflow.com/questions/44785585/how-can-i-delete-all-local-docker-images
 
 docker pull
 ____________
@@ -256,13 +256,21 @@ docker build -t my_docker_file .
 
 
 
+web server vs web container
 
+												web container
 
+client ----------- web server -----------------web container
+
+												web container
+			
+					ngix						tomcat 
+					httpd server
+
+		
 How to run nginx image with volume
 ---------------------------------
-
 docker run --name some-nginx -v /home/raj/Desktop/demo:/usr/share/nginx/html:ro -d nginx
-
 
 
 Example mongodb with docker:
@@ -274,8 +282,11 @@ ____________________
 mkdir mongodb_exp
 cd mongodb_exp
 
+assignment  : you have to srping boot app with mongodb
+
 docker pull mongo:latest
 docker run -d -p 2717:27017 -v C:/mongodb/db:/data/db --name mymongo mongo:latest
+
 docker run -d -p 2717:27017 -v /home/raj/Desktop/db:/data/db --name mymongo mongo:latest
 docker exec -it mymongo bash
 
@@ -942,9 +953,7 @@ How to create Docker images for spring boot applications?
 4. Jib maven/Gradle plugin
 
 
-https://www.youtube.com/watch?v=5q4w-c2WUv0&list=PLuNxlOYbv61h66_QlcjCEkVAj6RdeplJJ&index=8&ab_channel=SivaLabs
 
-https://dev.to/francescoxx/java-crud-rest-api-using-spring-boot-hibernate-postgres-docker-and-docker-compose-5cln
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

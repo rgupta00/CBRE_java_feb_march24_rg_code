@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/empappmysql/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/empappmysql_backup/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/empappmysql_worked/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/springboot-docker-compose-master/src/main/java" charset="UTF-8" />
+  </component>
+</project>

@@ -22,6 +22,453 @@ ________________
 kafka cluster contains many brokers and brokers is managed by zookeeper
 
 
+note:
+change configuration files:
+
+server.properties
+log.dirs=c:/kafka/kafka-logs
+
+zookeeper.properties
+dataDir=c:/kafka/zookeeper
+
+
+5 steps 
+________
+
+1. Start Zookeeper(port 2181)
+____________________________
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+
+
+2. Start Kafka Broker (9090)
+____________________________
+
+.\bin\windows\kafka-server-start.bat .\config\server.properties
+
+3. Create topic
+____________
+Topic: communication chennal on which producer put the messages and consumer consume the the data
+for performance consideration topic divided into partitions 
+If any partition is not working we keep replication
+
+.\kafka-topics.bat --bootstrap-server localhost:9092 --create --topic t-hello2 --partitions 3 --replication-factor 1
+
+List topic
+
+.\kafka-topics.bat --bootstrap-server localhost:9092 --list
+
+describe topic
+.\kafka-topics.bat --bootstrap-server localhost:9092 --describe --topic  t-hello2
+
+4. Start Producer
+__________________
+.\kafka-console-producer.bat --broker-list localhost:9092 --topic  t-hello3
+
+
+
+Send message
+How are you
+
+5> Receive message
+________________
+.\kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic  t-hello2 --from-beginning
+How are you
+
+
+
+Spring boot kafka hello world:
+__________________________________
+https://kafka.apache.org/quickstart
+
+1. Start Zookeeper(port 2181)
+____________________________
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+2. Start Kafka Broker (9090)
+____________________________
+bin/kafka-server-start.sh config/server.properties
+.\bin\windows\kafka-server-start.bat .\config\server.properties
+
+
+
+producer:
+_________
+
+@Service
+public class ProduceService {
+
+	@Autowired
+	private KafkaTemplate<String, String>kafkaTemplate;
+	
+	public void produce(String message) {
+		System.out.println("message is send....");
+		kafkaTemplate.send("my_topic", message);
+	}
+}
+
+
+@RestController
+public class ProducerController {
+
+	@Autowired
+	private ProduceService produceService;
+	@GetMapping("producer")
+	public String callProducer(@RequestParam String message) {
+		produceService.produce(message);
+		return "ok";
+	}
+}
+
+
+server.port=8080
+
+http://localhost:8080/producer?message=hello 
+
+
+consumer:
+_________
+
+
+@Service
+public class ConsumerService {
+	@KafkaListener(topics = "my_topic", groupId = "my_topic_group_id")
+	public void consume(String message) {
+		System.out.println(message);
+	}
+}
+
+
+server.port=8081
+
+
+
+kafka consumer/producer custom objects:
+______________________________________
+
+Kafka producer:
+______________
+
+public class Product {
+	private int id;
+	private String name;
+	private double price;
+}
+
+
+@Service
+public class ProduceService {
+	
+	@Autowired
+	private KafkaTemplate<String, Product>kafkaTemplate;
+	
+	public void produce(Product product) {
+		System.out.println("message is send....");
+		kafkaTemplate.send("my_topic", product);
+	}
+}
+
+Note: kafkaTemplate.send() method return CompletableFuture:
+---------------------------------------------------------- 
+CompletableFuture<SendResult<String, Product>> future = kafkaTemplate.send("my_topic", product);
+		future.whenComplete((result, ex) -> {
+				if(ex==null){
+					System.out.println("send message with offset: "+result.getRecordMetadata().offset());
+				}else{
+					System.out.println("unable to send message: "+ ex.getMessage());
+				}
+});
+
+by default spring boot create one replication factor and create performance problem:
+-------------------------------------------------------------------------------
+1. create topic manullay with 3 partition
+2. use programmatic approach
+
+@Configuration
+public class KafkaProducerConfig {
+
+    @Bean
+    public NewTopic createTopic(){
+        return new NewTopic("my_topic", 3, (short) 1);
+    }
+}
+
+
+		
+		
+
+@RestController
+public class ProducerController {
+
+	@Autowired
+	private ProduceService produceService;
+	@PostMapping("producer")
+	public String callProducer(@RequestBody Product product) {
+		produceService.produce(product);
+		return "product added";
+	}
+}
+
+server:
+  port: 8080
+spring:
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      bootstrap-servers: localhost:9092
+	  
+	  
+	  
+server.port=8080
+spring.kafka.producer.bootstrap-servers=localhost:9092
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer
+
+
+Note: all configuration can be done using java configuration inside a configuration class
+
+   @Bean
+    public Map<String,Object> producerConfig(){
+        Map<String,Object> props=new HashMap<>();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                "localhost:9092");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                JsonSerializer.class);
+        return props;
+    }
+
+    @Bean
+    public ProducerFactory<String,Object> producerFactory(){
+        return new DefaultKafkaProducerFactory<>(producerConfig());
+    }
+
+    @Bean
+    public KafkaTemplate<String,Object> kafkaTemplate(){
+        return new KafkaTemplate<>(producerFactory());
+    }
+
+
+Kafka consumer:
+______________
+
+
+public class Product {
+	private int id;
+	private String name;
+	private double price;
+}
+
+
+@Service
+public class ConsumerService {
+	@KafkaListener(topics = "my_topic", groupId = "my_topic_group_id")
+	public void consume(Product product) {
+		System.out.println(product);
+	}
+}
+
+server.port=8081
+spring.kafka.consumer.properties.spring.json.trusted.packages=*
+spring.kafka.consumer.key-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+spring.kafka.consumer.value-deserializer=org.springframework.kafka.support.serializer.JsonDeserializer
+
+
+
+
+server:
+  port: 8081
+spring:
+  kafka:
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: "*"
+
+
+Note: by default we have one consumer in group
+you can increate no of consumer and see the effect
+
+@KafkaListener(topics = "my_topic", groupId = "my_topic_group_id")
+	public void consume(Product product) {
+		System.out.println(product);
+	}
+@KafkaListener(topics = "my_topic", groupId = "my_topic_group_id")
+	public void consume(Product product) {
+		System.out.println(product);
+	}
+
+@KafkaListener(topics = "my_topic", groupId = "my_topic_group_id")
+	public void consume(Product product) {
+		System.out.println(product);
+	}
+
+
+Spring Boot with Kafka Producer Example with java configuration
+_______________________________________________________
+
+
+
+Start Zookeeper
+bin/zookeeper-server-start.sh config/zookeeper.properties
+
+Start Kafka Server
+bin/kafka-server-start.sh config/server.properties
+
+Create Kafka Topic
+bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic Kafka_Example
+
+Consume from the Kafka Topic via Console
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic Kafka_Example --from-beginning
+
+
+Consumer:
+___________
+
+
+
+
+
+
+
+
+
+# create topic t_hello
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic t_hello --partitions 1 --replication-factor 1
+
+# list topic
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+
+# describe topic
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic t_hello
+
+# create topic t_test
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic t_test --partitions 1 --replication-factor 1
+
+# delete topic t_test
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic t_test
+
+
+
+Hello producer:
+_______________
+
+@Service
+public class HelloKafkaProducer {
+	@Autowired
+	private KafkaTemplate<String, String>kafkaTemplate;
+	
+	public void sendHello(String name) {
+		kafkaTemplate.send("t_hello", "hello "+ name);
+	}
+}
+
+
+
+@SpringBootApplication
+public class KafkaProducerApplication implements CommandLineRunner{
+
+	@Autowired
+	private HelloKafkaProducer helloKafkaProducer;
+	
+	public static void main(String[] args) {
+		SpringApplication.run(KafkaProducerApplication.class, args);
+		
+	}
+
+	@Override
+	public void run(String... args) throws Exception {
+		helloKafkaProducer.sendHello("rajeev "+Math.random());
+	}
+
+}
+
+
+
+Kafka consumer:
+_______________
+
+
+@Service
+public class HelloConsumer {
+	@KafkaListener(topics = "t_hello")
+	public void consume(String message) {
+		System.out.println(message);
+	}
+}
+
+application.yml
+_______________
+
+server:
+  port: 8090
+spring:
+  kafka:
+    consumer:
+      group-id: "default-spring-consumer"
+
+
+Example: fixed rate consumer and producer:
+________________________________________
+
+@Service
+public class HelloKafkaProducer {
+	@Autowired
+	private KafkaTemplate<String, String>kafkaTemplate;
+	
+	private int i=0;
+	private Logger logger=LoggerFactory.getLogger(HelloKafkaProducer.class);
+	
+	@Scheduled(fixedRate = 1000)
+	public void sendHello() {
+		i++;
+		kafkaTemplate.send("t_hello", "fixed rate "+ i);
+	}
+}
+
+
+
+@EnableScheduling
+@SpringBootApplication
+public class KafkaProducerApplication implements CommandLineRunner{
+}
+
+
+
+
+
+
+------------------------------------------
+Kafka:
+______________
+
+Kafka is distributed event driven messaging system
+Millions of messages can be process per second
+mutiple producer multiple broker and consumer
+
+Kafka is distributed plateform: in production env kafk is reffered as kafka cluser 
+
+kafka cluser : made of more then one kafka server
+
+feature :
+* kafka is fault tolerence
+* in kafka cluster messages are replicated in multiple brokers
+* replication factor messages is present in all the brokers
+* kafka is scalable
+	we can add new brokers
+	we can increase no of consumers
+
+Installation:
+________________
+kafka cluster contains many brokers and brokers is managed by zookeeper
+
+
 5 steps 
 ________
 
@@ -29,7 +476,9 @@ ________
 ____________________________
 bin/zookeeper-server-start.sh config/zookeeper.properties
 
- bin/windows/zookeeper-server-start.bat config/zookeeper.properties
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+
 
 2. Start Kafka Broker (9090)
 ____________________________

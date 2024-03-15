@@ -112,6 +112,15 @@ public class OrderStatus {
 
 
 
+import com.orderapp.config.MessagingConfig;
+import com.orderapp.dto.Order;
+import com.orderapp.dto.OrderStatus;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/order")
 public class OrderPublisher {
@@ -132,7 +141,17 @@ public class OrderPublisher {
 
 
 
+Now call the endpoint:
+-----------------------
+post
 
+http://localhost:9292/order/sarvan bhavan
+
+{
+
+    "name":"north thalli",
+    "price":350
+}
 
 rabbitmq order consumer:
 ______________________
