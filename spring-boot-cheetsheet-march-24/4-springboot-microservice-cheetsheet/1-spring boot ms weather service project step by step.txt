@@ -319,8 +319,7 @@ Spring boot config server:
 -------------------------
 
 application.yaml
--------------------
-
+---------------
 spring:
   profiles:
     active:

@@ -1,0 +1,26 @@
+end point to register the user:
+
+post
+
+http://localhost:9092/authserver/register
+
+{
+  "username":"foo",
+  "password": "foo123"
+
+}
+
+
+
+next check the authenticate endpoint by using foo and foo123
+
+post
+http://localhost:9092/authserver/authenticate
+
+eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmb28iLCJpYXQiOjE2OTUzODE4NzksImV4cCI6MTY5NTM4MzY3OX0.-EmWung8GfDvgxHNH0QEL6pn37JsoTQojz_RYbknacA
+
+
+
+now lastly now check the validity of the token
+call the get method
+http://localhost:9092/authserver/validate?token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmb28iLCJpYXiOjE2OTUzODE4NzksImV4cCI6MTY5NTM4MzY3OX0.-EmWung8GfDvgxHNH0QEL6pn37JsoTQojz_RYbknacA

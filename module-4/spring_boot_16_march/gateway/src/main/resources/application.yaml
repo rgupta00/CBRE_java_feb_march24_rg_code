@@ -1,0 +1,25 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: apigateway
+  cloud:
+    gateway:
+      routes:
+        - id: wservice-id
+          uri: lb://WSERVICE
+          predicates:
+            - Path=/wservice/**
+
+        - id: wclient-id
+          uri: lb://WCLIENT
+          predicates:
+            - Path=/wclient/**
+
+eureka:
+  client:
+    registry-fetch-interval-seconds: 10
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

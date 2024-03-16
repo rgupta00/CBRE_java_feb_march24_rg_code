@@ -1,0 +1,30 @@
+server:
+  port: 8099
+spring:
+  config:
+    import: optional:configserver:http://localhost:8888
+  application:
+    name: apigateway
+  cloud:
+    gateway:
+      routes:
+        - id: wservice-id
+          uri: lb://WSERVICE
+          predicates:
+            - Path=/wservice/**
+          filters:
+            - name: AuthenticationFilter
+        - id: wclient-id
+          uri: lb://WCLIENT
+          predicates:
+            - Path=/wclient/**
+          filters:
+            - name: AuthenticationFilter
+
+eureka:
+  client:
+    registry-fetch-interval-seconds: 10
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

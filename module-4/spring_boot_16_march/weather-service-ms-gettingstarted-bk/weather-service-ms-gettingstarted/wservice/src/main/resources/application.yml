@@ -1,0 +1,15 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /wservice
+spring:
+  profiles:
+    active:
+      - qa
+  application:
+    name: wservice
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

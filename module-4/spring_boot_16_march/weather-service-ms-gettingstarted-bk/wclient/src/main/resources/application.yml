@@ -1,0 +1,15 @@
+server:
+  port: 8085
+  servlet:
+    context-path: /wclient
+spring:
+  profiles:
+    active:
+      - qa
+  application:
+    name:  wclient
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

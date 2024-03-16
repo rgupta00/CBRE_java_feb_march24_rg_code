@@ -278,16 +278,30 @@ ________________________
 
 mongodb with docker:
 ____________________
+what is port mapping?
+What is volume mapping?
 
 mkdir mongodb_exp
 cd mongodb_exp
 
+spring boot +mongdb
+
 assignment  : you have to srping boot app with mongodb
 
 docker pull mongo:latest
+
+				outside internal
+
+
+docker run -d -p 2717:27017 --name mymongo mongo:latest
+
+C:\mongodb\db
+
 docker run -d -p 2717:27017 -v C:/mongodb/db:/data/db --name mymongo mongo:latest
 
+
 docker run -d -p 2717:27017 -v /home/raj/Desktop/db:/data/db --name mymongo mongo:latest
+
 docker exec -it mymongo bash
 
 run all mongo commands
@@ -298,6 +312,17 @@ mongosh
 use rajdb;	
 db.employees.insert({empName:"ekta", age:"36", salary:"60000"})
 db.employees.find()
+
+
+
+devOps
+dev---- admin
+spring 
+jar----> docker image----> docker hub----> pull docker image ---> run of his machine”
+:)
+
+
+How to containerized a spring boot 
 
 
 
@@ -326,7 +351,7 @@ https://medium.com/spring-boot/speed-up-and-downsize-spring-boot-built-image-fro
 Approach 1: using docekr file : Docker hello world spring boot:
 ------------------------------------------------------------
 server:
-  port: 
+  port: 8080
 spring:
   application:
     name: 
@@ -379,8 +404,12 @@ public class InstanceInformationService {
 
 }
 
+try to call it locally
+http://localhost:8080/actuator/health/readiness
 
-server.port=8080
+
+
+
 
 
 
@@ -894,7 +923,7 @@ d. start the container in detached mode.
 
 
 
-docker container run --name mysqldb --network emp-mysql-network  -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=customerapp -d -p 3308:3306 mysql:5.7
+docker container run --name mysqldb --network emp-mysql-network  -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=demo123 -d -p 3308:3306 mysql
 
 Next let us check if container has started correctly using logs command
 

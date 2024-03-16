@@ -1,0 +1,5 @@
+build:
+  version: "2.0"
+info:
+  message: "Welcome to cbre weather service qa profile"
+  name: "Ravi: Product Owner cbre weather service qa profile"
